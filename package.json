@@ -11,7 +11,8 @@
 	},
 	"workspaces": [
 		"@ebfStyle/*",
-		"@ebfElements/*"
+		"@ebfElements/*",
+		"@ebfTranslate/*"
 	],
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "^7.0.0",

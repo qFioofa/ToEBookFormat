@@ -7,7 +7,9 @@ const config = {
 	kit: {
 		adapter: adapter(),
 		alias: {
-			'@ebfStyle': './@ebfStyle/*'
+			'@ebfStyle': './@ebfStyle/*',
+			'@ebfElements': './@ebfElements/*',
+			'@ebfTranslate': './@ebfTranslate/*'
 		}
 	}
 };

@@ -1,0 +1,13 @@
+{
+	"name": "@ebfTranslate",
+	"version": "1.0.0",
+	"description": "Translate classes for ebook fromater site",
+	"main": "index.js",
+	"type": "module",
+	"exports": {
+		".": "./index.js",
+	},
+	"files": [
+		"index.js",
+	]
+}

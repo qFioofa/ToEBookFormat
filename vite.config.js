@@ -4,14 +4,20 @@ import { defineConfig } from 'vite';
 export default defineConfig({
 	resolve: {
 		alias: {
-			'@ebfStyle': "@ebfStyle"
+			'@ebfStyle': "@ebfStyle",
+			'@ebfElements': '@ebfElements',
+			'@ebfTranslate': '@ebfTranslate'
 		}
 	},
 	server: {
 		host: '0.0.0.0',
 		port: 5173,
 		fs: {
-			allow: ['@ebfStyle']
+			allow: [
+				'@ebfStyle',
+				'@ebfTranslate',
+				"@ebfElements"
+			]
 		}
 	},
 	preview: {
