@@ -2,11 +2,12 @@ import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
+	plugins: [sveltekit()],
 	resolve: {
 		alias: {
-			'@ebfStyle': "@ebfStyle",
-			'@ebfElements': '@ebfElements',
-			'@ebfTranslate': '@ebfTranslate'
+			'@ebfStyle': "./ebfStyle",
+			'@ebfElements': './ebfElements',
+			'@ebfTranslate': './ebfTranslate'
 		}
 	},
 	server: {
@@ -14,9 +15,9 @@ export default defineConfig({
 		port: 5173,
 		fs: {
 			allow: [
-				'@ebfStyle',
-				'@ebfTranslate',
-				"@ebfElements"
+				'./ebfStyle',
+				'./ebfTranslate',
+				"./ebfElements"
 			]
 		}
 	},
@@ -25,6 +26,5 @@ export default defineConfig({
 		port: 4173,
 		allowedHosts: true
 	},
-	plugins: [sveltekit()]
 });
 

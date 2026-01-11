@@ -1,5 +1,5 @@
 {
-	"name": "@ebfStyle/",
+	"name": "ebfStyle",
 	"version": "1.0.0",
 	"description": "Style for ebook fromater site",
 	"main": "index.js",

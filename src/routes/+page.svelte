@@ -3,9 +3,7 @@
 
 	import { onMount } from "svelte";
 
-	onMount(() => {
-		console.log("Hello");
-	});
+	onMount(() => {});
 </script>
 
 <p>Welcome to converter!</p>

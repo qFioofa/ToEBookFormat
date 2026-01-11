@@ -4,7 +4,8 @@ export let Themes = [
 ]
 
 export default class StyleHandler {
-	constructor(defaultTheme = Themes[0], loadThemes = []) {
+	constructor(defaultTheme = Themes[0], loadThemes = [], prefix = "theme-") {
+		this.prefix = prefix || "";
 		this.themes = new Map();
 		this.currentTheme = defaultTheme;
 		this.registerTheme(loadThemes)
@@ -13,16 +14,18 @@ export default class StyleHandler {
 	registerTheme(name) {
 		if (name instanceof Array) {
 			for (const themeName of name) {
-				this.themes.set(themeName, `theme-${themeName}`);
+				this.themes.set(themeName, `${this.prefix}${themeName}`);
 			}
 			return
 		}
-		this.themes.set(name, `theme-${themeName}`);
+		this.themes.set(name, `${this.prefix}${themeName}`);
 	}
 
 	setTheme(name) {
-		if (!this.themes.has(name)) return;
+		if (typeof name !== 'string') return;
 		if (typeof document === 'undefined') return;
+
+		if (!this.themes.has(name)) return;
 
 		const className = this.themes.get(name);
 		this.removeAllThemeClasses();

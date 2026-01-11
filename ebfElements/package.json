@@ -1,13 +1,13 @@
 {
-	"name": "@ebfElements/",
+	"name": "ebfElements",
 	"version": "1.0.0",
 	"description": "UI elements for ebook fromater site",
 	"main": "index.js",
 	"type": "module",
 	"exports": {
-		".": "./index.js",
+		".": "./index.js"
 	},
 	"files": [
-		"index.js",
+		"index.js"
 	]
 }

@@ -2,7 +2,7 @@ html[class^="theme-"] {
 	transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-.theme-ssl-light {
+.theme-ebf-light {
 	--bg: #f8f9fa;
 	--bg-muted: #e9ecef;
 	--bg-subtle: #ffffff;
@@ -33,7 +33,7 @@ html[class^="theme-"] {
 	--shadow-inset: inset 0 2px 4px rgba(0, 0, 0, 0.03);
 }
 
-.theme-ssl-dark {
+.theme-ebf-dark {
 	--bg: #121218;
 	--bg-muted: #1e1e28;
 	--bg-subtle: #252531;
