@@ -3,6 +3,18 @@
 
 	let isVisible = false;
 
+	export let howToUseSection = {
+		text: "How to use",
+		href: "#how-to-use",
+	};
+
+	export let aboutSection = {
+		text: "About",
+		href: "#about",
+	};
+
+	$: navLinks = [howToUseSection, aboutSection];
+
 	onMount(() => {
 		isVisible = true;
 	});
@@ -10,11 +22,17 @@
 
 <header class="header-main">
 	<div class="header-content">
-		<h1 class="main-title">To eBook Converter</h1>
+		<div class="logo-and-nav">
+			<slot name="Logo" />
+			<nav class="nav-links">
+				<slot name="Options" />
+				{#each navLinks as link}
+					<a href={link.href} class="nav-link">{link.text}</a>
+				{/each}
+			</nav>
+		</div>
 		<p class="subtitle">
-			Как пользоваться: просто перетащите файл в нужном формате (PDF,
-			EPUB, FB2 и др.) в область загрузки, выберите желаемый формат вывода
-			и начните конвертацию.
+			<slot name="Subtitle" />
 		</p>
 	</div>
 </header>
@@ -23,9 +41,12 @@
 	.header-main {
 		width: 100%;
 		padding: var(--spacing-xl) var(--spacing-md);
-		text-align: center;
 		background: var(--bg-muted);
 		border-bottom: 1px solid var(--border);
+		box-shadow: var(--shadow-sm);
+		position: sticky;
+		top: 0;
+		z-index: 50;
 	}
 
 	.header-content {
@@ -35,13 +56,31 @@
 		animation: fadeInUp 0.6s ease-out forwards;
 	}
 
-	.main-title {
-		font-size: var(--font-size-xxl);
-		font-weight: var(--font-weight-bold);
-		color: var(--fg-heading);
-		margin: 0 0 var(--spacing-md);
-		line-height: var(--line-height-tight);
-		letter-spacing: var(--letter-spacing-wide);
+	.logo-and-nav {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: var(--spacing-md);
+		margin-bottom: var(--spacing-md);
+	}
+
+	.nav-links {
+		display: flex;
+		gap: var(--spacing-lg);
+		flex-shrink: 0;
+	}
+
+	.nav-link {
+		font-size: var(--font-size-base);
+		color: var(--fg-accent);
+		text-decoration: none;
+		transition: color 0.3s ease;
+	}
+
+	.nav-link:hover {
+		color: var(--fg-accent-hover);
+		text-decoration: underline;
 	}
 
 	.subtitle {
@@ -65,17 +104,30 @@
 		}
 	}
 
+	@media (max-width: 1200px) and (min-width: 769px) {
+		.header-main {
+			padding: var(--spacing-lg) var(--spacing-md);
+		}
+	}
+
 	@media (max-width: 768px) {
 		.header-main {
 			padding: var(--spacing-lg) var(--spacing-sm);
 		}
 
-		.main-title {
-			font-size: var(--font-size-xl);
+		.logo-and-nav {
+			flex-direction: column;
+			align-items: flex-start;
+		}
+
+		.nav-links {
+			order: 2;
+			width: 100%;
+			justify-content: flex-end;
 		}
 
 		.subtitle {
-			font-size: var(--font-size-base, 16px);
+			font-size: var(--font-size-base);
 		}
 	}
 
@@ -84,8 +136,9 @@
 			padding: var(--spacing-md) var(--spacing-xs);
 		}
 
-		.main-title {
-			font-size: var(--font-size-lg);
+		.nav-links {
+			justify-content: center;
+			gap: var(--spacing-md);
 		}
 
 		.subtitle {

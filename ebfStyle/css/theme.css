@@ -16,6 +16,8 @@ html[class^="theme-"] {
 	--fg-heading: #1a1a1a;
 	--fg-link: var(--accent);
 	--fg-link-hover: var(--accent-dark);
+	--fg-accent: #4caf50;
+	--fg-accent-hover: #388e3c;
 	--accent: #4caf50;
 	--accent-light: #81c784;
 	--accent-dark: #388e3c;
@@ -47,6 +49,8 @@ html[class^="theme-"] {
 	--fg-heading: #ffffff;
 	--fg-link: var(--accent);
 	--fg-link-hover: var(--accent-light);
+	--fg-accent: #81c784;
+	--fg-accent-hover: #a5d6a7;
 	--accent: #4caf50;
 	--accent-light: #81c784;
 	--accent-dark: #388e3c;
