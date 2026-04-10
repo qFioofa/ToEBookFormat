@@ -234,36 +234,38 @@ export class PdfReader {
 	async _extractImagesFromPage(page, pageNum) {
 		const images = [];
 		try {
-			const resources = await page.getResources();
-			if (resources && resources.get('XObject')) {
-				const xObjects = resources.get('XObject');
-				const xObjectNames = xObjects.keys ? xObjects.keys() : Object.keys(xObjects);
+			const operatorList = await page.getOperatorList();
+			const ops = operatorList.fnArray;
+			const args = operatorList.argsArray;
 
-				for (const imgName of xObjectNames) {
-					try {
-						const imgRef = xObjects.get ? xObjects.get(imgName) : xObjects[imgName];
-						if (imgRef) {
-							const img = await new Promise((resolve, reject) => {
-								page.objs.get(imgName, (data) => {
-									if (data) resolve(data);
-									else reject(new Error('Image data not available'));
-								});
-							});
+			// PDF.js operator constants for image painting
+			const paintImageXObject = 86;
+			const paintJpegImg = 87;
 
-							if (img && img.data && img.width && img.height) {
-								images.push({
-									page: pageNum,
-									data: img.data,
-									width: img.width,
-									height: img.height,
-									bitsPerComponent: img.bitsPerComponent || 8,
-									colorSpace: img.colorSpace || 'RGB'
-								});
-							}
-						}
-					} catch (e) {
-						console.warn(`Warning: Could not extract image ${imgName} on page ${pageNum}:`, e.message);
+			const imageNames = new Set();
+			for (let i = 0; i < ops.length; i++) {
+				if (ops[i] === paintImageXObject || ops[i] === paintJpegImg) {
+					if (args[i] && args[i][0]) {
+						imageNames.add(args[i][0]);
 					}
+				}
+			}
+
+			for (const imgName of imageNames) {
+				try {
+					const imgData = await page.objs.get(imgName);
+					if (imgData && imgData.data && imgData.width && imgData.height) {
+						images.push({
+							page: pageNum,
+							data: imgData.data,
+							width: imgData.width,
+							height: imgData.height,
+							bitsPerComponent: imgData.bitsPerComponent || 8,
+							colorSpace: imgData.colorSpace || 'RGB',
+						});
+					}
+				} catch (e) {
+					// Silently skip images that can't be extracted
 				}
 			}
 		} catch (e) {

@@ -3,20 +3,14 @@
 
 	$: fontSize =
 		size === "small"
-			? "var(--font-size-lg)"
+			? "1.1rem"
 			: size === "large"
-				? "var(--font-size-xxl)"
-				: "var(--font-size-xl)";
-	$: margin =
-		size === "small"
-			? "var(--spacing-sm)"
-			: size === "large"
-				? "var(--spacing-md)"
-				: "var(--spacing-md)";
+				? "1.4rem"
+				: "1.2rem";
 </script>
 
 <div class="logo-container">
-	<h1 class="logo-title" style="font-size: {fontSize}; margin-bottom: {margin};">
+	<h1 class="logo-title" style="font-size: {fontSize};">
 		📚 To eBook Converter
 	</h1>
 </div>
@@ -27,10 +21,11 @@
 	}
 
 	.logo-title {
-		font-weight: var(--font-weight-bold);
+		font-weight: 700;
 		color: var(--fg-heading);
-		line-height: var(--line-height-tight);
-		letter-spacing: var(--letter-spacing-wide);
+		line-height: 1.2;
+		letter-spacing: -0.01em;
 		margin: 0;
+		white-space: nowrap;
 	}
 </style>

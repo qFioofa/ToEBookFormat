@@ -33,6 +33,7 @@
 	let showRemoveConfirm = false;
 	let zipDownloading = false;
 	let foldedFiles = new Set();
+	let isConvertingAll = false;
 
 	const conversionHandlers = {};
 
@@ -168,6 +169,12 @@
 	}
 
 	async function handleConvert(id) {
+		const file = uploadedFiles.find((f) => f.id === id);
+		if (!file) return;
+		
+		// Don't start conversion if file is already being converted
+		if (file.status === "uploading" || file.status === "converting") return;
+
 		if (conversionHandlers[id]) {
 			if (conversionHandlers[id].cancel) {
 				conversionHandlers[id].cancel();
@@ -182,12 +189,12 @@
 			needsConversion: false,
 			error: null,
 		});
-		const file = uploadedFiles.find((f) => f.id === id);
-		if (file) {
-			conversionHandlers[file.id] = await startConversion(
-				file,
+		const updatedFile = uploadedFiles.find((f) => f.id === id);
+		if (updatedFile) {
+			conversionHandlers[updatedFile.id] = await startConversion(
+				updatedFile,
 				(changes) => {
-					updateFile(file.id, changes);
+					updateFile(updatedFile.id, changes);
 				}
 			);
 		}
@@ -211,13 +218,22 @@
 		const idx = uploadedFiles.findIndex((f) => f.id === id);
 		if (idx === -1) return;
 		const file = uploadedFiles[idx];
-		const needsConversion = file.status === "completed";
+		
+		// If the file was already converted, changing format means it needs re-conversion
+		const wasCompleted = file.status === "completed" && !file.needsConversion;
+		const formatChanged = file.format !== format;
+		
 		uploadedFiles = [
 			...uploadedFiles.slice(0, idx),
 			{
 				...file,
 				format,
-				needsConversion,
+				// Clear result and mark as needing conversion if format changed after completion
+				needsConversion: wasCompleted && formatChanged ? true : file.needsConversion,
+				resultBlob: wasCompleted && formatChanged ? null : file.resultBlob,
+				resultName: wasCompleted && formatChanged ? null : file.resultName,
+				// Keep status as completed but show it needs re-conversion
+				status: wasCompleted && formatChanged ? "completed" : file.status,
 			},
 			...uploadedFiles.slice(idx + 1),
 		];
@@ -226,72 +242,86 @@
 	function handleGlobalFormatChange(format) {
 		globalFormat = format;
 		uploadedFiles = uploadedFiles.map((f) => {
-			const needsConversion =
-				f.status === "completed" && f.format !== format;
+			const isProcessing = f.status === "uploading" || f.status === "converting";
+			const wasCompleted = f.status === "completed" && !f.needsConversion;
+			const formatChanged = f.format !== format;
+
 			return {
 				...f,
-				format:
-					f.status === "uploading" || f.status === "converting"
-						? format
-						: format,
-				needsConversion:
-					f.status === "completed"
-						? needsConversion
-						: f.needsConversion,
+				// Only auto-update format for files in progress or pending
+				format: isProcessing || f.status === "pending" ? format : f.format,
+				// Completed files need re-conversion if their format differs from new global
+				// and clear their result to force regeneration
+				needsConversion: wasCompleted && formatChanged ? true : f.needsConversion,
+				resultBlob: wasCompleted && formatChanged ? null : f.resultBlob,
+				resultName: wasCompleted && formatChanged ? null : f.resultName,
 			};
 		});
 	}
 
 	async function convertAll() {
-		const filesToConvert = uploadedFiles.filter(
-			(f) =>
-				f.status === "pending" ||
-				f.status === "completed" ||
-				f.status === "error" ||
-				f.needsConversion
-		);
+		// Prevent concurrent conversions
+		if (isConvertingAll) return;
+		isConvertingAll = true;
 
-		filesToConvert.forEach((file) => {
-			if (conversionHandlers[file.id]) {
-				if (conversionHandlers[file.id].cancel) {
-					conversionHandlers[file.id].cancel();
+		try {
+			const filesToConvert = uploadedFiles.filter(
+				(f) =>
+					(f.status === "pending" ||
+					f.status === "error" ||
+					f.needsConversion) &&
+					// Don't convert files that are already being converted
+					f.status !== "uploading" &&
+					f.status !== "converting"
+			);
+
+			if (filesToConvert.length === 0) {
+				isConvertingAll = false;
+				return;
+			}
+
+			filesToConvert.forEach((file) => {
+				if (conversionHandlers[file.id]) {
+					if (conversionHandlers[file.id].cancel) {
+						conversionHandlers[file.id].cancel();
+					}
+					delete conversionHandlers[file.id];
 				}
-				delete conversionHandlers[file.id];
-			}
-			if (file.status === "completed" || file.status === "error") {
-				updateFile(file.id, {
-					status: "uploading",
-					progress: 0,
-					resultBlob: null,
-					resultName: null,
-					needsConversion: false,
-					error: null,
-				});
-			}
-		});
-
-		await Promise.all(
-			filesToConvert.map(async (file) => {
-				const idx = uploadedFiles.findIndex(
-					(f) => f.id === file.id
-				);
-				if (idx === -1) return;
-				const currentFile = uploadedFiles[idx];
-				if (
-					currentFile.status === "pending" ||
-					currentFile.status === "uploading"
-				) {
-					updateFile(currentFile.id, {
+				// Reset files that need conversion
+				if (file.status === "completed" || file.status === "error") {
+					updateFile(file.id, {
 						status: "uploading",
 						progress: 0,
+						resultBlob: null,
+						resultName: null,
+						needsConversion: false,
+						error: null,
 					});
-					conversionHandlers[currentFile.id] =
-						await startConversion(currentFile, (changes) => {
-							updateFile(currentFile.id, changes);
-						});
 				}
-			})
-		);
+			});
+
+			await Promise.all(
+				filesToConvert.map(async (file) => {
+					const idx = uploadedFiles.findIndex(
+						(f) => f.id === file.id
+					);
+					if (idx === -1) return;
+					const currentFile = uploadedFiles[idx];
+					// Convert pending files or files that were just reset to uploading
+					if (
+						currentFile.status === "pending" ||
+						currentFile.status === "uploading"
+					) {
+						conversionHandlers[currentFile.id] =
+							await startConversion(currentFile, (changes) => {
+								updateFile(currentFile.id, changes);
+							});
+					}
+				})
+			);
+		} finally {
+			isConvertingAll = false;
+		}
 	}
 
 	async function downloadAllZip() {
@@ -438,9 +468,9 @@
 									e.detail.id,
 									e.detail.format
 								)}
-							on:remove={() =>
+							on:remove={(e) =>
 								handleRemoveFile(e.detail)}
-							on:retry={() => handleRetry(e.detail)}
+							on:retry={(e) => handleRetry(e.detail)}
 							on:convert={(e) =>
 								handleConvert(e.detail)}
 							on:fold={(e) =>

@@ -20,8 +20,13 @@
 </script>
 
 <div class="lang-selector">
-	<button class="lang-btn" on:click={toggleMenu} type="button">
-		🌐 {GlobalTranslater.t("lang_current")}
+	<button class="lang-btn" on:click={toggleMenu} type="button" aria-label="Switch language">
+		<svg class="lang-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+			<circle cx="12" cy="12" r="10"></circle>
+			<line x1="2" y1="12" x2="22" y2="12"></line>
+			<path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+		</svg>
+		<span class="lang-label">{GlobalTranslater.t("lang_current")}</span>
 	</button>
 	{#if showLangMenu}
 		<div class="lang-dropdown">
@@ -34,7 +39,8 @@
 				on:click={() => switchLang("en")}
 				type="button"
 			>
-				🇬🇧 {GlobalTranslater.t("lang_en")}
+				<span class="lang-flag">🇬🇧</span>
+				<span class="lang-name">{GlobalTranslater.t("lang_en")}</span>
 			</button>
 			<button
 				class="lang-option"
@@ -42,7 +48,8 @@
 				on:click={() => switchLang("ru")}
 				type="button"
 			>
-				🇷🇺 {GlobalTranslater.t("lang_ru")}
+				<span class="lang-flag">🇷🇺</span>
+				<span class="lang-name">{GlobalTranslater.t("lang_ru")}</span>
 			</button>
 		</div>
 	{/if}
@@ -77,6 +84,16 @@
 		);
 		color: #fff;
 		border-color: var(--accent);
+	}
+
+	.lang-icon {
+		width: 16px;
+		height: 16px;
+		flex-shrink: 0;
+	}
+
+	.lang-label {
+		white-space: nowrap;
 	}
 
 	.lang-dropdown {
@@ -118,7 +135,7 @@
 	.lang-option {
 		display: flex;
 		align-items: center;
-		gap: 8px;
+		gap: 10px;
 		width: 100%;
 		padding: 8px 14px;
 		border: none;
@@ -147,5 +164,14 @@
 		);
 		color: var(--accent);
 		font-weight: 600;
+	}
+
+	.lang-flag {
+		font-size: 1.1rem;
+		flex-shrink: 0;
+	}
+
+	.lang-name {
+		white-space: nowrap;
 	}
 </style>

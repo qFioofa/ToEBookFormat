@@ -1,8 +1,12 @@
 /**
- * BookModel — represents a structured book document with metadata,
- * chapters, and content. Used as the intermediate representation
- * between extraction and format-specific generation.
+ * BookModel — intermediate representation of a structured book.
+ * Bridges raw extracted text and format-specific generators.
+ *
+ * Pipeline:
+ *   PDF → PdfReader → StructureAnalyzer → BookModel → [EpubGenerator | Fb2Generator | …]
  */
+import { StructureAnalyzer } from '../structureAnalyzer/StructureAnalyzer.js';
+
 export class BookModel {
 	constructor() {
 		this.title = 'Untitled Book';
@@ -12,14 +16,14 @@ export class BookModel {
 		this.publisher = '';
 		this.pubDate = '';
 		this.isbn = '';
-		this.chapters = [];
-		this.images = [];
+		this.chapters = [];  // [{ title, paragraphs }]
+		this.images = [];    // [{ data, width, height, page }]
 		this.coverImage = null;
 	}
 
 	/**
-	 * Create a BookModel from raw text using the StructureAnalyzer.
-	 * @param {string} text
+	 * Create a BookModel from raw text using StructureAnalyzer.
+	 * @param {string} text - Raw extracted text from PDF
 	 * @param {object} [metadata]
 	 * @param {string} [metadata.title]
 	 * @param {string} [metadata.author]
@@ -34,67 +38,50 @@ export class BookModel {
 		if (metadata.language) book.language = metadata.language;
 		if (metadata.images) book.images = metadata.images;
 
-		// Parse chapters from text
-		const paragraphs = text.split('\n\n').filter(p => p.trim());
-		let currentChapter = { title: book.title, paragraphs: [] };
+		const analyzer = new StructureAnalyzer();
+		const { chapters } = analyzer.analyze(text, book.title);
 
-		for (const para of paragraphs) {
-			const trimmed = para.trim();
-			if (!trimmed) continue;
-
-			// Check if this paragraph looks like a chapter heading
-			const h1Match = trimmed.match(/^#\s+(.+)/);
-			const h2Match = trimmed.match(/^##\s+(.+)/);
-			const isShortTitle = trimmed.length < 80 && !/[.!?]$/.test(trimmed) && trimmed.split(' ').length <= 8;
-
-			if (h1Match || h2Match || (isShortTitle && currentChapter.paragraphs.length > 0)) {
-				book.chapters.push(currentChapter);
-				currentChapter = {
-					title: h1Match ? h1Match[1].trim() : h2Match ? h2Match[1].trim() : trimmed,
-					paragraphs: []
-				};
-			} else {
-				currentChapter.paragraphs.push(trimmed);
+		for (const ch of chapters) {
+			const paragraphs = [];
+			for (const block of ch.blocks) {
+				for (const item of block.items) {
+					if (item.type === 'paragraph') {
+						paragraphs.push(item.text);
+					}
+				}
+			}
+			if (paragraphs.length > 0 || ch.title) {
+				book.chapters.push({
+					title: ch.title || book.title,
+					paragraphs,
+				});
 			}
 		}
 
-		if (currentChapter.paragraphs.length > 0 || book.chapters.length === 0) {
-			book.chapters.push(currentChapter);
-		}
-
-		// If no chapters were detected, treat entire text as one chapter
 		if (book.chapters.length === 0) {
+			const paragraphs = text
+				.split('\n\n')
+				.map((p) => p.trim())
+				.filter(Boolean);
 			book.chapters.push({
 				title: book.title,
-				paragraphs: paragraphs.map(p => p.trim()).filter(Boolean)
+				paragraphs,
 			});
 		}
 
 		return book;
 	}
 
-	/**
-	 * Get the total paragraph count across all chapters.
-	 * @returns {number}
-	 */
 	getParagraphCount() {
 		return this.chapters.reduce((sum, ch) => sum + ch.paragraphs.length, 0);
 	}
 
-	/**
-	 * Get the total word count.
-	 * @returns {number}
-	 */
 	getWordCount() {
 		return this.chapters.reduce((sum, ch) => {
 			return sum + ch.paragraphs.reduce((s, p) => s + p.split(/\s+/).filter(Boolean).length, 0);
 		}, 0);
 	}
 
-	/**
-	 * Render the book as plain text.
-	 * @returns {string}
-	 */
 	renderText() {
 		const parts = [];
 		for (const chapter of this.chapters) {
@@ -108,10 +95,6 @@ export class BookModel {
 		return parts.join('').trim();
 	}
 
-	/**
-	 * Render the book as HTML.
-	 * @returns {string}
-	 */
 	renderHtml() {
 		const parts = [];
 		for (const chapter of this.chapters) {
@@ -126,8 +109,10 @@ export class BookModel {
 	}
 
 	/**
-	 * Render the book as FB2 body sections.
-	 * @returns {string}
+	 * Render FB2 body with proper structure:
+	 * - Each chapter is a <section>
+	 * - Chapter title in <title><p>…</p></title>
+	 * - <empty-line/> between paragraphs
 	 */
 	renderFb2Body() {
 		const parts = [];
@@ -136,8 +121,12 @@ export class BookModel {
 			if (chapter.title) {
 				parts.push(`      <title><p>${this._escapeXml(chapter.title)}</p></title>`);
 			}
-			for (const para of chapter.paragraphs) {
-				parts.push(`      <p>${this._escapeXml(para)}</p>`);
+			for (let i = 0; i < chapter.paragraphs.length; i++) {
+				parts.push(`      <p>${this._escapeXml(chapter.paragraphs[i])}</p>`);
+				// Add empty-line between paragraphs (not after the last one)
+				if (i < chapter.paragraphs.length - 1) {
+					parts.push('      <empty-line/>');
+				}
 			}
 			parts.push('    </section>');
 		}

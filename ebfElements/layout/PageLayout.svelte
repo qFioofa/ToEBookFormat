@@ -6,9 +6,15 @@
 </script>
 
 <HeaderMain {howToUseSection} {aboutSection}>
-	<slot name="Logo" />
-	<slot name="Subtitle" />
-	<slot name="Options" />
+	<svelte:fragment slot="Logo">
+		<slot name="Logo" />
+	</svelte:fragment>
+	<svelte:fragment slot="Subtitle">
+		<slot name="Subtitle" />
+	</svelte:fragment>
+	<svelte:fragment slot="Options">
+		<slot name="Options" />
+	</svelte:fragment>
 </HeaderMain>
 
 <main class="main-content">

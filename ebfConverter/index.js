@@ -1,5 +1,11 @@
-// ebfConverter — main entry point
-// Re-exports all conversion modules for easy importing
+/**
+ * ebfConverter — main entry point.
+ *
+ * Pipeline:
+ *   PDF file → PdfReader → StructureAnalyzer → BookModel → Format Generator → Blob
+ *
+ * Supported formats: epub, fb2, mobi, azw3, txt
+ */
 
 export { BookModel } from './bookModel/BookModel.js';
 export { StructureAnalyzer } from './structureAnalyzer/StructureAnalyzer.js';
@@ -9,13 +15,12 @@ export { EpubGenerator } from './epubGenerator/EpubGenerator.js';
 export { Fb2Generator } from './fb2Generator/Fb2Generator.js';
 export { MobiGenerator } from './mobiGenerator/MobiGenerator.js';
 
-// Convenience re-exports for common usage
 export const FORMAT_OPTIONS = [
-	{ value: "epub", label: "EPUB", icon: "📖", ext: ".epub" },
-	{ value: "fb2", label: "FB2", icon: "📄", ext: ".fb2" },
-	{ value: "mobi", label: "MOBI", icon: "📱", ext: ".mobi" },
-	{ value: "azw3", label: "AZW3", icon: "🔥", ext: ".azw3" },
-	{ value: "txt", label: "TXT", icon: "📝", ext: ".txt" },
+	{ value: 'epub', label: 'EPUB', icon: '📖', ext: '.epub' },
+	{ value: 'fb2', label: 'FB2', icon: '📄', ext: '.fb2' },
+	{ value: 'mobi', label: 'MOBI', icon: '📱', ext: '.mobi' },
+	{ value: 'azw3', label: 'AZW3', icon: '🔥', ext: '.azw3' },
+	{ value: 'txt', label: 'TXT', icon: '📝', ext: '.txt' },
 ];
 
 export function generateId() {
@@ -23,15 +28,16 @@ export function generateId() {
 }
 
 export function formatFileSize(bytes) {
-	if (!bytes || bytes === 0) return "0 KB";
+	if (!bytes || bytes === 0) return '0 KB';
 	const kb = bytes / 1024;
-	return kb < 1024 ? kb.toFixed(1) + " KB" : (kb / 1024).toFixed(1) + " MB";
+	return kb < 1024 ? kb.toFixed(1) + ' KB' : (kb / 1024).toFixed(1) + ' MB';
 }
 
 /**
  * High-level conversion API for use from the UI.
- * Takes a file object (with .file, .format, .title, .author, .language)
- * and an onProgress callback, and returns a { cancel } handle.
+ * @param {object} file - { file: File, format: string, title?: string, author?: string, language?: string }
+ * @param {Function} onProgress - callback({ progress: 0-100, status: string, ... })
+ * @returns {Promise<{ cancel: Function }>}
  */
 export async function startConversion(file, onProgress) {
 	if (!file.file || file.file.type !== 'application/pdf') {
@@ -41,8 +47,9 @@ export async function startConversion(file, onProgress) {
 	let cancelled = false;
 
 	try {
-		onProgress({ progress: 30, status: 'converting' });
+		onProgress({ progress: 10, status: 'converting' });
 
+		// Step 1: Extract text and images from PDF
 		const { PdfReader } = await import('./pdfReader/PdfReader.js');
 		const reader = new PdfReader();
 
@@ -50,25 +57,27 @@ export async function startConversion(file, onProgress) {
 			await file.file.arrayBuffer(),
 			(progress) => {
 				if (!cancelled) {
-					onProgress({ progress: Math.round(30 + progress * 0.2), status: 'converting' });
+					onProgress({ progress: Math.round(10 + progress * 0.3), status: 'converting' });
 				}
 			}
 		);
 
 		if (cancelled) return { cancel: () => {} };
 
-		const title = file.title || file.name.replace(/\.[^/.]+$/, '');
-		const author = file.author || 'Unknown Author';
-		const language = file.language || 'en';
-
+		// Step 2: Clean and analyze text structure
 		const { StructureAnalyzer } = await import('./structureAnalyzer/StructureAnalyzer.js');
 		const analyzer = new StructureAnalyzer();
 		const cleanText = analyzer.cleanDocumentText(extractedText);
 
 		onProgress({ progress: 50, status: 'converting' });
 
-		let blob;
+		// Step 3: Generate output format
+		const title = file.title || file.name.replace(/\.[^/.]+$/, '');
+		const author = file.author || 'Unknown Author';
+		const language = file.language || 'en';
 		const baseName = file.name.replace(/\.[^/.]+$/, '');
+
+		let blob;
 		let resultName;
 
 		switch (file.format) {
@@ -78,7 +87,6 @@ export async function startConversion(file, onProgress) {
 				break;
 
 			case 'epub': {
-				if (cancelled) return { cancel: () => {} };
 				onProgress({ progress: 60, status: 'converting' });
 				const { EpubGenerator } = await import('./epubGenerator/EpubGenerator.js');
 				const gen = new EpubGenerator();
@@ -88,7 +96,6 @@ export async function startConversion(file, onProgress) {
 			}
 
 			case 'fb2': {
-				if (cancelled) return { cancel: () => {} };
 				onProgress({ progress: 60, status: 'converting' });
 				const { Fb2Generator } = await import('./fb2Generator/Fb2Generator.js');
 				const gen = new Fb2Generator();
@@ -98,7 +105,6 @@ export async function startConversion(file, onProgress) {
 			}
 
 			case 'mobi': {
-				if (cancelled) return { cancel: () => {} };
 				onProgress({ progress: 60, status: 'converting' });
 				const { MobiGenerator } = await import('./mobiGenerator/MobiGenerator.js');
 				const gen = new MobiGenerator();
@@ -108,7 +114,6 @@ export async function startConversion(file, onProgress) {
 			}
 
 			case 'azw3': {
-				if (cancelled) return { cancel: () => {} };
 				onProgress({ progress: 60, status: 'converting' });
 				const { MobiGenerator } = await import('./mobiGenerator/MobiGenerator.js');
 				const gen = new MobiGenerator();
@@ -124,16 +129,15 @@ export async function startConversion(file, onProgress) {
 		if (cancelled) return { cancel: () => {} };
 
 		onProgress({ progress: 95, status: 'converting' });
-		await new Promise(resolve => setTimeout(resolve, 100));
+		await new Promise((resolve) => setTimeout(resolve, 100));
 		if (cancelled) return { cancel: () => {} };
 
 		onProgress({
 			progress: 100,
 			status: 'completed',
-			resultName: resultName,
+			resultName,
 			resultBlob: blob,
 		});
-
 	} catch (error) {
 		console.error('Conversion error:', error);
 		onProgress({ progress: 0, status: 'error', error: error.message });
@@ -144,6 +148,7 @@ export async function startConversion(file, onProgress) {
 
 /**
  * Extract PDF metadata (title, author, page count) from a file object.
+ * @param {object} fileObj - { file: File, pages?: number, title?: string, author?: string }
  */
 export async function extractPdfMetadata(fileObj) {
 	try {
@@ -155,10 +160,10 @@ export async function extractPdfMetadata(fileObj) {
 			if (metadata.title) fileObj.title = metadata.title;
 			if (metadata.author) fileObj.author = metadata.author;
 		} else {
-			fileObj.pages = "—";
+			fileObj.pages = '—';
 		}
 	} catch (e) {
-		console.error("Error extracting PDF metadata:", e);
-		fileObj.pages = "—";
+		console.error('Error extracting PDF metadata:', e);
+		fileObj.pages = '—';
 	}
 }

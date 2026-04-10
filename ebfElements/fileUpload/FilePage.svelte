@@ -17,6 +17,9 @@
 	let removing = false;
 	let folding = false;
 
+	// Ensure selectedFormat is always a valid string
+	$: safeFormat = String(selectedFormat || 'epub').toLowerCase();
+
 	function t(key, params = {}) {
 		if (!translator) return key;
 		let text = translator.t(key);
@@ -75,7 +78,7 @@
 		const newMsgs = [];
 		if (file.status === 'pending') newMsgs.push({ type: 'info', text: t('filepage_waiting') });
 		if (file.status === 'uploading') newMsgs.push({ type: 'info', text: `${t('filepage_uploading')} ${file.progress || 0}%` });
-		if (file.status === 'converting') newMsgs.push({ type: 'info', text: t('filepage_converting', { format: selectedFormat.toUpperCase(), progress: file.progress }) });
+		if (file.status === 'converting') newMsgs.push({ type: 'info', text: t('filepage_converting', { format: safeFormat.toUpperCase(), progress: file.progress }) });
 		if (file.status === 'completed') newMsgs.push({ type: 'success', text: t('filepage_complete') });
 		if (file.status === 'error') newMsgs.push({ type: 'error', text: file.error || t('filepage_failed') });
 		logMessages = newMsgs;
@@ -111,7 +114,7 @@
 			const url = URL.createObjectURL(file.resultBlob);
 			const a = document.createElement("a");
 			a.href = url;
-			a.download = file.resultName || file.name.replace(/\.[^/.]+$/, "") + "." + selectedFormat;
+			a.download = file.resultName || file.name.replace(/\.[^/.]+$/, "") + "." + safeFormat;
 			document.body.appendChild(a);
 			a.click();
 			document.body.removeChild(a);
@@ -164,7 +167,7 @@
 					<div class="folded-controls">
 						<div class="folded-format">
 							<span class="folded-format-label">{t('filepage_formatLabel')}</span>
-							<select class="folded-format-select" value={selectedFormat} on:change={handleFormatChange}>
+							<select class="folded-format-select" value={safeFormat} on:change={handleFormatChange}>
 								{#each formatOptions as opt}
 									<option value={opt.value}>{opt.icon} {opt.label}</option>
 								{/each}
@@ -173,7 +176,7 @@
 						<div class="folded-action">
 							{#if file?.status === "completed" && !file?.needsConversion}
 								<button class="btn-dl-sm" class:downloading on:click={handleDownload}>
-									{#if downloading}<span class="dl-spinner"></span>{:else}⬇ {selectedFormat.toUpperCase()}{/if}
+									{#if downloading}<span class="dl-spinner"></span>{:else}⬇ {safeFormat.toUpperCase()}{/if}
 								</button>
 							{:else if file?.status === "completed" && file?.needsConversion}
 								<button class="btn-convert-sm" on:click={handleConvert}>🔄 Convert</button>
@@ -281,7 +284,7 @@
 
 					<div class="info-panel format-panel">
 						<span class="panel-label">{t('filepage_formatLabel')}</span>
-						<select class="format-select" value={selectedFormat} on:change={handleFormatChange}>
+						<select class="format-select" value={safeFormat} on:change={handleFormatChange}>
 							{#each formatOptions as opt}
 								<option value={opt.value}>{opt.icon} {opt.label}</option>
 							{/each}
@@ -291,14 +294,14 @@
 					<div class="info-panel action-panel">
 						{#if file?.status === "completed" && !file?.needsConversion}
 							<button class="btn-download" class:downloading on:click={handleDownload}>
-								{#if downloading}<span class="dl-spinner"></span>{:else}⬇ Download {selectedFormat.toUpperCase()}{/if}
+								{#if downloading}<span class="dl-spinner"></span>{:else}⬇ Download {safeFormat.toUpperCase()}{/if}
 							</button>
 						{:else if file?.status === "completed" && file?.needsConversion}
-							<button class="btn-convert" on:click={handleConvert}>🔄 Convert to {selectedFormat.toUpperCase()}</button>
+							<button class="btn-convert" on:click={handleConvert}>🔄 Convert to {safeFormat.toUpperCase()}</button>
 						{:else if file?.status === "error"}
 							<button class="btn-retry" on:click={handleRetry}>🔄 {t('filepage_retry')}</button>
 						{:else if file?.status === "pending"}
-							<button class="btn-convert" on:click={handleConvert}>🔄 Convert to {selectedFormat.toUpperCase()}</button>
+							<button class="btn-convert" on:click={handleConvert}>🔄 Convert to {safeFormat.toUpperCase()}</button>
 						{:else}
 							<button class="btn-convert" disabled={file?.status === 'converting' || file?.status === 'uploading'} on:click={handleConvert}>
 								{#if file?.status === 'converting' || file?.status === 'uploading'}<span class="btn-spinner"></span>{/if}

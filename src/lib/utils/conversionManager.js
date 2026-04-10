@@ -126,18 +126,34 @@ export class ConversionManager {
 	updateFileFormat(id, uploadedFiles, format) {
 		const idx = uploadedFiles.findIndex((f) => f.id === id);
 		if (idx === -1) return uploadedFiles;
-		uploadedFiles[idx] = { ...uploadedFiles[idx], format };
+		const file = uploadedFiles[idx];
+		// If the file was completed, changing format means it needs re-conversion
+		const needsConversion = file.status === "completed" && file.format !== format;
+		uploadedFiles[idx] = {
+			...file,
+			format,
+			needsConversion,
+			// Clear old result if format changed
+			resultBlob: needsConversion ? null : file.resultBlob,
+			resultName: needsConversion ? null : file.resultName,
+		};
 		return uploadedFiles;
 	}
 
 	updateGlobalFormat(globalFormat, uploadedFiles) {
-		return uploadedFiles.map((f) => ({
-			...f,
-			format:
-				f.status === "uploading" || f.status === "converting"
-					? globalFormat
-					: f.format,
-		}));
+		return uploadedFiles.map((f) => {
+			const isProcessing = f.status === "uploading" || f.status === "converting";
+			const isCompleted = f.status === "completed";
+			const formatChanged = f.format !== globalFormat;
+			
+			return {
+				...f,
+				// Only auto-update format for files in progress
+				format: isProcessing ? globalFormat : f.format,
+				// Completed files need re-conversion if their format differs
+				needsConversion: isCompleted && formatChanged ? true : f.needsConversion,
+			};
+		});
 	}
 
 	async convertAll(uploadedFiles, updateCallback) {
