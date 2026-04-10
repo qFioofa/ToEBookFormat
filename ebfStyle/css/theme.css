@@ -1,0 +1,83 @@
+html[class^="theme-"] {
+	transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.theme-ebf-light {
+	--bg: #f8f9fa;
+	--bg-muted: #eef0f3;
+	--bg-subtle: #ffffff;
+	--bg-overlay: rgba(248, 249, 250, 0.9);
+	--bg-card: #ffffff;
+	--bg-hover: #e2e5ea;
+	--bg-active: #d5d9df;
+
+	--fg: #1a1c20;
+	--fg-muted: #5f6a7a;
+	--fg-subtle: #8b96a5;
+	--fg-disabled: #b0b8c4;
+	--fg-heading: #111318;
+	--fg-link: var(--accent);
+	--fg-link-hover: var(--accent-dark);
+	--fg-accent: #2ea043;
+	--fg-accent-hover: #288c3a;
+
+	--accent: #2ea043;
+	--accent-light: #4ac262;
+	--accent-dark: #248a38;
+	--accent-muted: rgba(46, 160, 67, 0.1);
+
+	--panel: #ffffff;
+	--input-bg: #ffffff;
+	--input-fg: #1a1c20;
+	--input-border: rgba(95, 106, 122, 0.25);
+	--input-placeholder: #8b96a5;
+	--border: rgba(95, 106, 122, 0.18);
+	--divider: rgba(95, 106, 122, 0.1);
+
+	--shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+	--shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.04);
+	--shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+	--shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.1);
+	--shadow-xl: 0 12px 40px rgba(0, 0, 0, 0.14);
+	--shadow-inset: inset 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.theme-ebf-dark {
+	--bg: #0a0c10;
+	--bg-muted: #12151c;
+	--bg-subtle: #1a1e28;
+	--bg-overlay: rgba(10, 12, 16, 0.9);
+	--bg-card: #12151c;
+	--bg-hover: #1c2029;
+	--bg-active: #252a35;
+
+	--fg: #e0e4ea;
+	--fg-muted: #7a8494;
+	--fg-subtle: #5c6573;
+	--fg-disabled: #404752;
+	--fg-heading: #f0f2f5;
+	--fg-link: var(--accent);
+	--fg-link-hover: var(--accent-light);
+	--fg-accent: #58d68d;
+	--fg-accent-hover: #6ee8a2;
+
+	--accent: #58d68d;
+	--accent-light: #7ee8a2;
+	--accent-dark: #2ea043;
+	--accent-muted: rgba(88, 214, 141, 0.1);
+
+	--panel: #12151c;
+	--input-bg: #0a0c10;
+	--input-fg: #e0e4ea;
+	--input-border: rgba(122, 132, 148, 0.25);
+	--input-placeholder: #5c6573;
+	--border: rgba(122, 132, 148, 0.14);
+	--divider: rgba(122, 132, 148, 0.06);
+
+	--shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+	--shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.2);
+	--shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+	--shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+	--shadow-xl: 0 12px 40px rgba(0, 0, 0, 0.6);
+	--shadow-inset: inset 0 1px 2px rgba(0, 0, 0, 0.3);
+}

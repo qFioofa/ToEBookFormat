@@ -1,0 +1,274 @@
+/**
+ * PdfReader — PDF text extraction, image extraction, and metadata reading.
+ * Wraps pdfjs-dist with proper Unicode/Cyrillic support and clean text output.
+ */
+export class PdfReader {
+	constructor() {
+		this._pdfjsLib = null;
+	}
+
+	async _getLib() {
+		if (!this._pdfjsLib) {
+			this._pdfjsLib = await import('pdfjs-dist');
+			this._pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+				'pdfjs-dist/build/pdf.worker.min.mjs',
+				import.meta.url
+			).toString();
+		}
+		return this._pdfjsLib;
+	}
+
+	/**
+	 * Extract PDF metadata: title, author, number of pages.
+	 * @param {ArrayBuffer} arrayBuffer
+	 * @returns {Promise<{title?: string, author?: string, numPages: number}|null>}
+	 */
+	async getMetadata(arrayBuffer) {
+		const lib = await this._getLib();
+		try {
+			const pdf = await lib.getDocument({ data: arrayBuffer }).promise;
+			const metadata = await pdf.getMetadata();
+			const info = { numPages: pdf.numPages };
+			if (metadata?.info) {
+				if (metadata.info.Title) info.title = metadata.info.Title;
+				if (metadata.info.Author) info.author = metadata.info.Author;
+			}
+			return info;
+		} catch (e) {
+			console.error("Error extracting PDF metadata:", e);
+			return null;
+		}
+	}
+
+	/**
+	 * Extract text and images from a PDF file.
+	 * @param {ArrayBuffer} arrayBuffer
+	 * @param {Function} [onProgress] — callback with 0-100 progress
+	 * @returns {Promise<{text: string, images: Array<{page: number, data: Uint8Array, width: number, height: number}>}>}
+	 */
+	async extractTextAndImages(arrayBuffer, onProgress) {
+		const lib = await this._getLib();
+		try {
+			const pdf = await lib.getDocument({ data: arrayBuffer }).promise;
+			const numPages = pdf.numPages;
+			const allPageTexts = [];
+			const images = [];
+
+			for (let i = 1; i <= numPages; i++) {
+				const page = await pdf.getPage(i);
+				const textContent = await page.getTextContent();
+
+				const pageText = this._extractTextFromPage(textContent, i);
+				allPageTexts.push(pageText);
+
+				try {
+					const pageImages = await this._extractImagesFromPage(page, i);
+					images.push(...pageImages);
+				} catch (imgErr) {
+					console.warn(`Warning: Could not extract images from page ${i}:`, imgErr.message);
+				}
+
+				if (onProgress) {
+					onProgress(Math.round((i / numPages) * 100));
+				}
+			}
+
+			let fullText = allPageTexts.join('\n\n');
+			fullText = this._cleanTypography(fullText);
+
+			return { text: fullText.trim(), images };
+		} catch (error) {
+			console.error("Error extracting text and images from PDF:", error);
+			throw new Error("Failed to extract from PDF: " + error.message);
+		}
+	}
+
+	/**
+	 * Extract text from a single page with proper Unicode support.
+	 */
+	_extractTextFromPage(textContent, pageNum) {
+		const items = textContent.items.map(item => ({
+			str: item.str,
+			x: Math.round(item.transform[4]),
+			y: Math.round(item.transform[5]),
+			width: Math.round(item.width),
+			height: Math.round(item.height),
+			fontSize: item.transform[0],
+			fontName: item.fontName || '',
+			dir: item.dir || 'ltr'
+		}));
+
+		// Sort by vertical position (top to bottom), then horizontal (left to right)
+		items.sort((a, b) => {
+			const yDiff = b.y - a.y;
+			if (Math.abs(yDiff) > 2) return yDiff;
+			return a.x - b.x;
+		});
+
+		// Group items into lines by y-coordinate
+		const lines = [];
+		let currentLine = [];
+		let lastY = null;
+
+		for (const item of items) {
+			if (!item.str.trim()) continue;
+			const yGap = lastY !== null ? Math.abs(item.y - lastY) : 0;
+			if (currentLine.length > 0 && yGap > item.height * 0.8) {
+				lines.push(currentLine);
+				currentLine = [];
+			}
+			currentLine.push(item);
+			lastY = item.y;
+		}
+		if (currentLine.length > 0) lines.push(currentLine);
+
+		// Filter out page numbers and decorative artifacts
+		const filteredLines = lines.filter(line => {
+			const lineText = line.map(item => item.str).join(' ').trim();
+			if (/^—?\s*Страница\s+\d+\s+из\s+\d+\s*—?$/i.test(lineText)) return false;
+			if (/^•••/.test(lineText)) return false;
+			if (/^\d+$/.test(lineText.trim()) && lineText.trim().length <= 4) return false;
+			if (/^[═─•·\s\-]+$/.test(lineText) && lineText.length > 5) return false;
+			return true;
+		});
+
+		// Group lines into paragraphs based on vertical gaps
+		const paragraphs = [];
+		let currentParagraph = [];
+		let lastLineY = null;
+
+		for (const line of filteredLines) {
+			if (line.length === 0) continue;
+			const lineY = line[0].y;
+			const lineFontSize = line.reduce((sum, item) => sum + item.fontSize, 0) / line.length;
+
+			if (currentParagraph.length > 0 && lastLineY !== null) {
+				const yGap = Math.abs(lineY - lastLineY);
+				const prevLine = currentParagraph[currentParagraph.length - 1];
+				const prevFontSize = prevLine.reduce((sum, item) => sum + item.fontSize, 0) / prevLine.length;
+				const fontSizeChange = Math.abs(lineFontSize - prevFontSize);
+				if (yGap > line[0].height * 1.5 || fontSizeChange > 1) {
+					paragraphs.push(currentParagraph);
+					currentParagraph = [];
+				}
+			}
+			currentParagraph.push(line);
+			lastLineY = lineY;
+		}
+		if (currentParagraph.length > 0) paragraphs.push(currentParagraph);
+
+		// Build formatted text
+		let result = "";
+		for (const para of paragraphs) {
+			const paraLines = para.map(line => {
+				line.sort((a, b) => a.x - b.x);
+				let lineText = "";
+				for (let i = 0; i < line.length; i++) {
+					const item = line[i];
+					if (i === 0) {
+						lineText = item.str;
+					} else {
+						const prevItem = line[i - 1];
+						const gap = item.x - (prevItem.x + prevItem.width);
+						if (gap > 2 || (!prevItem.str.endsWith(' ') && !item.str.startsWith(' '))) {
+							lineText += " " + item.str;
+						} else {
+							lineText += item.str;
+						}
+					}
+				}
+				return lineText.trim();
+			}).filter(l => l.length > 0);
+
+			const paraText = paraLines.join(' ').trim();
+			if (!paraText) continue;
+
+			const cleanText = this._cleanInlineTypography(paraText);
+			if (result.length > 0 && !result.endsWith("\n\n")) {
+				result += "\n\n";
+			}
+			result += cleanText + "\n";
+		}
+
+		return result;
+	}
+
+	/**
+	 * Clean inline typography.
+	 */
+	_cleanInlineTypography(text) {
+		let result = text;
+		result = result.replace(/\s+([.,;:!?])/g, '$1');
+		result = result.replace(/([а-яА-Яa-zA-Z])\s+-\s+([а-яА-Яa-zA-Z])/g, '$1-$2');
+		result = result.replace(/"\s+([^"]+?)\s+"/g, '"$1"');
+		result = result.replace(/\s+"([^"]+)"\s+/g, ' "$1" ');
+		result = result.replace(/\s+"([^"]+)"$/g, ' "$1"');
+		result = result.replace(/^"([^"]+)"\s+/g, '"$1" ');
+		result = result.replace(/\s{2,}/g, ' ');
+		result = result.split('\n').map(line => line.trim()).join('\n');
+		return result.trim();
+	}
+
+	/**
+	 * Post-process the full document text.
+	 */
+	_cleanTypography(text) {
+		let result = text;
+		result = result.replace(/^[═─]{3,}\s*$/gm, '');
+		result = result.replace(/^[•·]+(\s+[•·]+)*\s*$/gm, '');
+		result = result.replace(/—?\s*Страница\s+\d+\s+из\s+\d+\s*—?/gi, '');
+		result = result.replace(/^\s*\d{1,4}\s*$/gm, '');
+		result = result.replace(/\s+([.,;:!?])/g, '$1');
+		result = result.replace(/([а-яА-Яa-zA-Z])\s+-\s+([а-яА-Яa-zA-Z])/g, '$1-$2');
+		result = result.replace(/"\s+([^"]+?)\s+"/g, '"$1"');
+		result = result.replace(/\n{4,}/g, '\n\n\n');
+		result = result.split('\n').map(line => line.trim()).join('\n');
+		result = result.replace(/^\n+/, '');
+		result = result.trimEnd();
+		return result;
+	}
+
+	/**
+	 * Extract images from a PDF page.
+	 */
+	async _extractImagesFromPage(page, pageNum) {
+		const images = [];
+		try {
+			const resources = await page.getResources();
+			if (resources && resources.get('XObject')) {
+				const xObjects = resources.get('XObject');
+				const xObjectNames = xObjects.keys ? xObjects.keys() : Object.keys(xObjects);
+
+				for (const imgName of xObjectNames) {
+					try {
+						const imgRef = xObjects.get ? xObjects.get(imgName) : xObjects[imgName];
+						if (imgRef) {
+							const img = await new Promise((resolve, reject) => {
+								page.objs.get(imgName, (data) => {
+									if (data) resolve(data);
+									else reject(new Error('Image data not available'));
+								});
+							});
+
+							if (img && img.data && img.width && img.height) {
+								images.push({
+									page: pageNum,
+									data: img.data,
+									width: img.width,
+									height: img.height,
+									bitsPerComponent: img.bitsPerComponent || 8,
+									colorSpace: img.colorSpace || 'RGB'
+								});
+							}
+						}
+					} catch (e) {
+						console.warn(`Warning: Could not extract image ${imgName} on page ${pageNum}:`, e.message);
+					}
+				}
+			}
+		} catch (e) {
+			console.warn(`Warning: Could not process page ${pageNum} for images:`, e.message);
+		}
+		return images;
+	}
+}

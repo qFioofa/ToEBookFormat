@@ -1,0 +1,27 @@
+{
+	"name": "ebfConverter",
+	"version": "1.0.0",
+	"description": "Ebook format conversion library for ToEBookFormat",
+	"main": "index.js",
+	"type": "module",
+	"exports": {
+		".": "./index.js",
+		"./bookModel": "./bookModel/BookModel.js",
+		"./structureAnalyzer": "./structureAnalyzer/StructureAnalyzer.js",
+		"./pdfReader": "./pdfReader/PdfReader.js",
+		"./imageEncoder": "./imageEncoder/imageEncoder.js",
+		"./epubGenerator": "./epubGenerator/EpubGenerator.js",
+		"./fb2Generator": "./fb2Generator/Fb2Generator.js",
+		"./mobiGenerator": "./mobiGenerator/MobiGenerator.js"
+	},
+	"files": [
+		"index.js",
+		"bookModel/",
+		"structureAnalyzer/",
+		"pdfReader/",
+		"imageEncoder/",
+		"epubGenerator/",
+		"fb2Generator/",
+		"mobiGenerator/"
+	]
+}

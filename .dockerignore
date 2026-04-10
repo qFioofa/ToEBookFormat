@@ -1,0 +1,50 @@
+# Dependencies — installed inside container
+# (NOT ignored — package-lock.json is needed for reproducible builds)
+
+# Build output
+.svelte-kit
+build
+.output
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# AI files
+.ai/
+
+# NPM config
+.npmrc
+
+# Logs
+*.log
+npm-debug.log*
+
+# Env files
+.env
+.env.*
+!.env.example
+
+# Railpack
+railpack.yml
+Procfile
+
+# Misc
+README.md
+LICENSE

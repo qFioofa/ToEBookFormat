@@ -1,0 +1,35 @@
+{
+	"name": "ToEBookFormat",
+	"private": true,
+	"version": "0.0.1",
+	"type": "module",
+	"workspaces": [
+		"ebfElements",
+		"ebfStyle",
+		"ebfTranslate",
+		"ebfConverter"
+	],
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build",
+		"preview": "vite preview",
+		"start": "node build",
+		"prepare": "svelte-kit sync || echo ''"
+	},
+	"devDependencies": {
+		"@sveltejs/adapter-node": "^5.5.4",
+		"@sveltejs/kit": "^2.49.4",
+		"@sveltejs/vite-plugin-svelte": "^6.2.4",
+		"svelte": "^5.46.1",
+		"vite": "^7.3.1"
+	},
+	"dependencies": {
+		"jszip": "^3.10.1",
+		"pdfjs-dist": "^5.6.205"
+	},
+	"overrides": {
+		"cookie": "^0.7.0",
+		"nth-check": "^2.1.1",
+		"lodash.pick": "npm:lodash-es@^4.17.21"
+	}
+}

@@ -1,0 +1,10 @@
+# Railpack config for SvelteKit + adapter-node
+# https://railpack.com/config/file
+
+build:
+  commands:
+    - npm install
+    - npm run build
+
+run:
+  command: node build

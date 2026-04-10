@@ -1,0 +1,20 @@
+services:
+  toebookformat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NODE_ENV: production
+    container_name: toebookformat
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - HOST=0.0.0.0
+      - PORT=3000
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.50"
