@@ -16,11 +16,11 @@ export { Fb2Generator } from './fb2Generator/Fb2Generator.js';
 export { MobiGenerator } from './mobiGenerator/MobiGenerator.js';
 
 export const FORMAT_OPTIONS = [
-	{ value: 'epub', label: 'EPUB', icon: '📖', ext: '.epub' },
-	{ value: 'fb2', label: 'FB2', icon: '📄', ext: '.fb2' },
-	{ value: 'mobi', label: 'MOBI', icon: '📱', ext: '.mobi' },
-	{ value: 'azw3', label: 'AZW3', icon: '🔥', ext: '.azw3' },
-	{ value: 'txt', label: 'TXT', icon: '📝', ext: '.txt' },
+	{ value: 'epub', label: 'EPUB', icon: '/iconBooks/epub.svg', ext: '.epub' },
+	{ value: 'fb2', label: 'FB2', icon: '/iconBooks/fb2.svg', ext: '.fb2' },
+	{ value: 'mobi', label: 'MOBI', icon: '/iconBooks/mobi.svg', ext: '.mobi' },
+	{ value: 'azw3', label: 'AZW3', icon: '/iconBooks/azw3.svg', ext: '.azw3' },
+	{ value: 'txt', label: 'TXT', icon: '/iconBooks/txt.svg', ext: '.txt' },
 ];
 
 export function generateId() {

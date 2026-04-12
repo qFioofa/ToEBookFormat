@@ -184,7 +184,9 @@
 							<span class="folded-format-label">{t('filepage_formatLabel')}</span>
 							<select class="folded-format-select" value={safeFormat} on:change={handleFormatChange}>
 								{#each formatOptions as opt}
-									<option value={opt.value}>{opt.icon} {opt.label}</option>
+									<option value={opt.value}>
+										{opt.label}
+									</option>
 								{/each}
 							</select>
 						</div>
@@ -304,7 +306,7 @@
 						<span class="panel-label">📄 {t('filepage_formatLabel')}</span>
 						<select class="format-select" value={safeFormat} on:change={handleFormatChange}>
 							{#each formatOptions as opt}
-								<option value={opt.value}>{opt.icon} {opt.label}</option>
+								<option value={opt.value}>{opt.label}</option>
 							{/each}
 						</select>
 					</div>

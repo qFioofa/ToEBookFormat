@@ -76,7 +76,7 @@
 								on:click={() => handleGlobalFormatChange(opt.value)}
 								type="button"
 							>
-								<span class="format-icon">{opt.icon}</span>
+								<img class="format-icon" src={opt.icon} alt={opt.label} />
 								<span class="format-text">{opt.label}</span>
 							</button>
 						{/each}
@@ -294,7 +294,9 @@
 	}
 
 	.format-icon {
-		font-size: 13px;
+		width: 20px;
+		height: 20px;
+		object-fit: contain;
 	}
 
 	.format-text {

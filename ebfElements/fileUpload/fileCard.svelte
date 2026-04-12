@@ -97,7 +97,7 @@
 			>
 				{#each formatOptions as opt}
 					<option value={opt.value}>
-						{opt.icon} {opt.label}
+						{opt.label}
 					</option>
 				{/each}
 			</select>

@@ -22,7 +22,7 @@
 				on:click={() => handleSelect(option.value)}
 				type="button"
 			>
-				<span class="option-icon">{option.icon}</span>
+				<img class="option-icon" src={option.icon} alt={option.label} />
 				<span class="option-name">{option.label}</span>
 				<span class="option-ext">{option.ext}</span>
 			</button>
@@ -88,7 +88,9 @@
 	}
 
 	.option-icon {
-		font-size: var(--font-size-lg);
+		width: 20px;
+		height: 20px;
+		object-fit: contain;
 		line-height: 1;
 	}
 

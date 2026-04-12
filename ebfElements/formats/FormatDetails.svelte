@@ -3,7 +3,7 @@
 
 	const formats = [
 		{
-			icon: '📖',
+			icon: '/iconBooks/epub.svg',
 			name: 'EPUB',
 			version: '3.0 / 3.1',
 			description: GlobalTranslater.t('format_epub_desc'),
@@ -21,7 +21,7 @@
 			color: '#00acc1',
 		},
 		{
-			icon: '📄',
+			icon: '/iconBooks/fb2.svg',
 			name: 'FB2',
 			version: '2.0 / 2.1',
 			description: GlobalTranslater.t('format_fb2_desc'),
@@ -39,7 +39,7 @@
 			color: '#66bb6a',
 		},
 		{
-			icon: '📱',
+			icon: '/iconBooks/mobi.svg',
 			name: 'MOBI',
 			version: 'KF8 / MOBI 7',
 			description: GlobalTranslater.t('format_mobi_desc'),
@@ -57,7 +57,7 @@
 			color: '#ffa726',
 		},
 		{
-			icon: '🔥',
+			icon: '/iconBooks/azw3.svg',
 			name: 'AZW3',
 			version: 'KF8 (Kindle Format 8)',
 			description: GlobalTranslater.t('format_azw3_desc'),
@@ -75,7 +75,7 @@
 			color: '#ef5350',
 		},
 		{
-			icon: '📝',
+			icon: '/iconBooks/txt.svg',
 			name: 'TXT',
 			version: 'UTF-8',
 			description: GlobalTranslater.t('format_txt_desc'),
@@ -105,7 +105,7 @@
 			{#each formats as format}
 				<div class="format-card">
 					<div class="format-header">
-						<span class="format-icon">{format.icon}</span>
+						<img class="format-icon" src={format.icon} alt={format.name} />
 						<div class="format-title-group">
 							<h3 class="format-name">{format.name}</h3>
 							<span class="format-version">{format.version}</span>
@@ -214,7 +214,9 @@
 	}
 
 	.format-icon {
-		font-size: 2rem;
+		width: 40px;
+		height: 40px;
+		object-fit: contain;
 		filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
 	}
 
@@ -367,7 +369,8 @@
 		}
 
 		.format-icon {
-			font-size: 1.5rem;
+			width: 32px;
+			height: 32px;
 		}
 
 		.format-name {

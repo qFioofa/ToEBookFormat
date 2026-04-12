@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <rect x="14" y="8" width="36" height="48" rx="8" fill="#ffa726" opacity="0.1"/>
+  <rect x="14" y="8" width="36" height="48" rx="8" stroke="#ffa726" stroke-width="2.5"/>
+  <!-- Phone screen -->
+  <rect x="19" y="16" width="26" height="30" rx="3" fill="#ffa726" opacity="0.12"/>
+  <!-- Book lines on screen -->
+  <line x1="24" y1="24" x2="40" y2="24" stroke="#ffa726" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+  <line x1="24" y1="30" x2="40" y2="30" stroke="#ffa726" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+  <line x1="24" y1="36" x2="36" y2="36" stroke="#ffa726" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+  <!-- Format name -->
+  <text x="32" y="52" text-anchor="middle" fill="#ffa726" font-size="11" font-weight="800" font-family="Inter, sans-serif" letter-spacing="0.5">MOBI</text>
+</svg>
