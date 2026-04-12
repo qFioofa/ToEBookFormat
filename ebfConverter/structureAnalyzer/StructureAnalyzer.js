@@ -13,7 +13,6 @@
  */
 export class StructureAnalyzer {
 	constructor() {
-		// Patterns for numbered sections (Russian and English)
 		this._numberedPatterns = [
 			/^(?:Глава|Chapter|Ch\.?)\s+(\d+|[IVXLC]+)\.?\s*:?\s*(.*)$/i,
 			/^(?:Часть|Part)\s+(\d+|[IVXLC]+)\.?\s*:?\s*(.*)$/i,
@@ -22,7 +21,6 @@ export class StructureAnalyzer {
 			/^(?:Шаг|Step)\s+(\d+|[IVXLC]+)\.?\s*:?\s*(.*)$/i,
 		];
 
-		// Patterns for appendix/ending sections
 		this._endingPatterns = [
 			/^(?:Заключение|Conclusion|Epilogue|Эпилог)/i,
 			/^(?:Приложение|Appendix)/i,
@@ -40,23 +38,15 @@ export class StructureAnalyzer {
 	 */
 	cleanDocumentText(text) {
 		let result = text;
-		// Remove decorative borders
 		result = result.replace(/^[═─]{3,}\s*$/gm, '');
 		result = result.replace(/^[•·]+(\s+[•·]+)*\s*$/gm, '');
-		// Remove page number patterns (Russian and English)
 		result = result.replace(/—?\s*Страница\s+\d+\s+из\s+\d+\s*—?/gi, '');
 		result = result.replace(/—?\s*Page\s+\d+\s+of\s+\d+\s*—?/gi, '');
-		// Remove orphaned standalone numbers
 		result = result.replace(/^\s*\d{1,4}\s*$/gm, '');
-		// Remove spaces before punctuation
 		result = result.replace(/\s+([.,;:!?])/g, '$1');
-		// Fix hyphenated words split across lines
 		result = result.replace(/([а-яА-Яa-zA-Z])\s+-\s+([а-яА-Яa-zA-Z])/g, '$1-$2');
-		// Fix quotes
 		result = result.replace(/"\s+([^"]+?)\s+"/g, '"$1"');
-		// Remove multiple consecutive blank lines
 		result = result.replace(/\n{4,}/g, '\n\n\n');
-		// Trim lines
 		result = result.split('\n').map((line) => line.trim()).join('\n');
 		result = result.replace(/^\n+/, '');
 		result = result.trimEnd();
@@ -80,7 +70,6 @@ export class StructureAnalyzer {
 				continue;
 			}
 
-			// Check for markdown-style headings first
 			const h1Match = line.match(/^#\s+(.+)/);
 			const h2Match = line.match(/^##\s+(.+)/);
 			const h3Match = line.match(/^###\s+(.+)/);
@@ -110,7 +99,6 @@ export class StructureAnalyzer {
 				continue;
 			}
 
-			// Check for numbered sections (Глава 1, Часть II, etc.)
 			const numberedMatch = this._matchNumberedSection(line);
 			if (numberedMatch) {
 				classified.push({
@@ -121,7 +109,6 @@ export class StructureAnalyzer {
 				continue;
 			}
 
-			// Check for structural headings (ALL CAPS, short, no ending punctuation)
 			if (this._isStructuralHeading(line, lines, i)) {
 				classified.push({
 					type: 'heading',
@@ -131,7 +118,6 @@ export class StructureAnalyzer {
 				continue;
 			}
 
-			// Check for title-like lines (short, capitalized, no punctuation)
 			if (this._isLikelyHeading(line)) {
 				classified.push({
 					type: 'heading',
@@ -173,10 +159,8 @@ export class StructureAnalyzer {
 	 * @returns {boolean}
 	 */
 	_isStructuralHeading(line, allLines, index) {
-		// Must be relatively short
 		if (line.length > 80 || line.length < 2) return false;
 
-		// Must be ALL CAPS (Cyrillic or Latin)
 		const hasLetters = /[а-яА-Яa-zA-Z]/.test(line);
 		if (!hasLetters) return false;
 
@@ -184,21 +168,15 @@ export class StructureAnalyzer {
 			line === line.toUpperCase() && line !== line.toLowerCase();
 		if (!isAllCaps) return false;
 
-		// Should not end with sentence punctuation (but period after abbreviation is OK)
-		// Allow trailing period for things like "ВВЕДЕНИЕ."
 		const stripped = line.replace(/\.$/, '');
 		if (/[.!?]$/.test(stripped)) return false;
 
-		// Should be followed by a blank line or significant gap (next non-blank line is far)
 		let nextNonBlank = index + 1;
 		while (nextNonBlank < allLines.length && !allLines[nextNonBlank].trim()) {
 			nextNonBlank++;
 		}
-		// If there's a blank line after, it's likely a heading
 		if (nextNonBlank > index + 1) return true;
 
-		// If the next line exists and is a regular paragraph, still could be a heading
-		// if this line is very short (≤30 chars)
 		if (line.length <= 30) return true;
 
 		return false;
@@ -213,9 +191,7 @@ export class StructureAnalyzer {
 	_isLikelyHeading(text) {
 		if (text.length > 80) return false;
 		if (text.length < 3) return false;
-		// If it ends with sentence-ending punctuation, it's probably not a heading
 		if (/[.!?]$/.test(text)) return false;
-		// If it's very short and capitalized, likely a heading
 		if (
 			text.length <= 40 &&
 			/^[A-ZА-ЯЁ]/.test(text) &&
@@ -253,7 +229,6 @@ export class StructureAnalyzer {
 				}
 				currentBlock.items.push(item);
 			}
-			// blank lines are skipped during grouping
 		}
 
 		if (currentBlock) blocks.push(currentBlock);
@@ -309,13 +284,10 @@ export class StructureAnalyzer {
 		const lower = text.toLowerCase().trim();
 		const bookLower = bookTitle.toLowerCase().trim();
 
-		// Skip if it matches the book title
 		if (bookLower && lower.includes(bookLower)) return false;
 
-		// Numbered sections are always chapters
 		if (this._matchNumberedSection(text)) return true;
 
-		// ALL CAPS headings of moderate length are chapters
 		if (
 			text === text.toUpperCase() &&
 			text !== text.toLowerCase() &&
@@ -325,7 +297,6 @@ export class StructureAnalyzer {
 			return true;
 		}
 
-		// Known chapter-ending words
 		for (const pattern of this._endingPatterns) {
 			if (pattern.test(text)) return true;
 		}

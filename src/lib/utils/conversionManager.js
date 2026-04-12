@@ -55,6 +55,9 @@ export class ConversionManager {
 							(f) => f.id === file.id
 						);
 						if (idx !== -1) {
+							if (changes.status === "completed") {
+								changes.needsConversion = false;
+							}
 							updatedFiles[idx] = {
 								...updatedFiles[idx],
 								...changes,
@@ -111,6 +114,9 @@ export class ConversionManager {
 					(f) => f.id === id
 				);
 				if (fileIdx !== -1) {
+					if (changes.status === "completed") {
+						changes.needsConversion = false;
+					}
 					uploadedFiles[fileIdx] = {
 						...uploadedFiles[fileIdx],
 						...changes,
@@ -127,13 +133,11 @@ export class ConversionManager {
 		const idx = uploadedFiles.findIndex((f) => f.id === id);
 		if (idx === -1) return uploadedFiles;
 		const file = uploadedFiles[idx];
-		// If the file was completed, changing format means it needs re-conversion
 		const needsConversion = file.status === "completed" && file.format !== format;
 		uploadedFiles[idx] = {
 			...file,
 			format,
 			needsConversion,
-			// Clear old result and set to pending if format changed
 			resultBlob: needsConversion ? null : file.resultBlob,
 			resultName: needsConversion ? null : file.resultName,
 			status: needsConversion ? "pending" : file.status,
@@ -149,13 +153,9 @@ export class ConversionManager {
 
 			return {
 				...f,
-				// Always update format to the new global format
 				format: globalFormat,
-				// Completed files need re-conversion if their format differs
-				// Reset to pending so they are clearly marked as needing reconversion
 				status: isCompleted && formatChanged ? "pending" : f.status,
 				needsConversion: isCompleted && formatChanged ? true : f.needsConversion,
-				// Clear old results
 				resultBlob: isCompleted && formatChanged ? null : f.resultBlob,
 				resultName: isCompleted && formatChanged ? null : f.resultName,
 			};
@@ -197,6 +197,9 @@ export class ConversionManager {
 							(f) => f.id === file.id
 						);
 						if (fileIdx !== -1) {
+							if (changes.status === "completed") {
+								changes.needsConversion = false;
+							}
 							uploadedFiles[fileIdx] = {
 								...uploadedFiles[fileIdx],
 								...changes,

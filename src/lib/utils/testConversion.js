@@ -1,11 +1,5 @@
-/**
- * Test script for book conversion output validation
- * Tests the StructureAnalyzer text cleaning from ebfConverter
- */
-
 import { StructureAnalyzer } from "../../../ebfConverter/structureAnalyzer/StructureAnalyzer.js";
 
-// Sample raw text simulating PDF extraction (with artifacts)
 const sampleRawText = `════════════════════════════════════════════════════════════
 ЛЕГКАЯ ПОКЕРНАЯ МАТЕМАТИКА
 ════════════════════════════════════════════════════════════
@@ -80,11 +74,9 @@ function test(name, fn) {
 	}
 }
 
-// Clean the sample text using StructureAnalyzer
 const analyzer = new StructureAnalyzer();
 const cleanText = analyzer.cleanDocumentText(sampleRawText);
 
-// Test 1: Basic cleaning
 test("Basic text cleaning", () => {
 	assert(cleanText.length > 100, "Cleaned text has substantial content");
 	assert(
@@ -93,7 +85,6 @@ test("Basic text cleaning", () => {
 	);
 });
 
-// Test 2: Typography cleanup
 test("Typography cleanup", () => {
 	assert(!cleanText.includes(" ,"), "No spaces before commas");
 	assert(!cleanText.includes(" ."), "No spaces before periods");
@@ -105,13 +96,11 @@ test("Typography cleanup", () => {
 	assert(!cleanText.includes("Страница"), "No page numbers");
 });
 
-// Test 3: Paragraph structure
 test("Paragraph structure", () => {
 	const paragraphs = cleanText.split("\n\n").filter((p) => p.trim());
 
 	assert(paragraphs.length > 0, "Has paragraphs");
 
-	// Check paragraph quality
 	for (const para of paragraphs) {
 		assert(
 			para.length > 3,
@@ -122,7 +111,6 @@ test("Paragraph structure", () => {
 	}
 });
 
-// Test 4: FB2 output simulation
 test("FB2 output simulation", () => {
 	const fb2Sections = analyzer.renderFb2Sections(cleanText);
 
@@ -132,7 +120,6 @@ test("FB2 output simulation", () => {
 	assert(!fb2Sections.includes("Страница"), "No page numbers in FB2");
 });
 
-// Test 5: HTML output simulation
 test("HTML output simulation", () => {
 	const html = analyzer.renderHtml(cleanText);
 
@@ -141,7 +128,6 @@ test("HTML output simulation", () => {
 	assert(!html.includes("•••"), "No bullets in HTML");
 });
 
-// Test 6: TXT output
 test("TXT output", () => {
 	const text = analyzer.renderText(cleanText);
 
@@ -151,7 +137,6 @@ test("TXT output", () => {
 	assert(!text.includes("Страница"), "No page numbers in TXT");
 });
 
-// Summary
 console.log("\n" + "=".repeat(50));
 console.log(`Results: ${passed} passed, ${failed} failed`);
 console.log("=".repeat(50));

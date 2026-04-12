@@ -17,7 +17,6 @@
 	let removing = false;
 	let folding = false;
 
-	// Ensure selectedFormat is always a valid format string
 	$: safeFormat = (() => {
 		const fmt = typeof selectedFormat === 'string' ? selectedFormat.toLowerCase() : 'epub';
 		const validFormats = ['epub', 'fb2', 'mobi', 'azw3', 'txt'];
@@ -98,7 +97,6 @@
 
 	function handleRemove() {
 		removing = true;
-		// Wait for slide animation to finish before dispatching
 		setTimeout(() => {
 			dispatch('remove', file.id);
 		}, 500);
@@ -124,6 +122,19 @@
 			document.body.removeChild(a);
 			URL.revokeObjectURL(url);
 			setTimeout(() => { downloading = false; }, 500);
+		}
+	}
+
+	function handleDownloadOriginal() {
+		if (file.file) {
+			const url = URL.createObjectURL(file.file);
+			const a = document.createElement("a");
+			a.href = url;
+			a.download = file.name;
+			document.body.appendChild(a);
+			a.click();
+			document.body.removeChild(a);
+			URL.revokeObjectURL(url);
 		}
 	}
 
@@ -178,6 +189,9 @@
 							</select>
 						</div>
 						<div class="folded-action">
+							<button class="btn-dl-orig-sm" on:click={handleDownloadOriginal} title={t('filepage_downloadOriginal')}>
+								📥
+							</button>
 							{#if file?.status === "completed" && !file?.needsConversion}
 								<button class="btn-dl-sm" class:downloading on:click={handleDownload}>
 									{#if downloading}<span class="dl-spinner"></span>{:else}⬇ {safeFormat.toUpperCase()}{/if}
@@ -287,7 +301,7 @@
 					</div>
 
 					<div class="info-panel format-panel">
-						<span class="panel-label">{t('filepage_formatLabel')}</span>
+						<span class="panel-label">📄 {t('filepage_formatLabel')}</span>
 						<select class="format-select" value={safeFormat} on:change={handleFormatChange}>
 							{#each formatOptions as opt}
 								<option value={opt.value}>{opt.icon} {opt.label}</option>
@@ -312,6 +326,9 @@
 								{t('filepage_convert')}
 							</button>
 						{/if}
+						<button class="btn-download-original" on:click={handleDownloadOriginal}>
+							📥 {t('filepage_downloadOriginal')}
+						</button>
 					</div>
 
 					<div class="info-panel log-panel">
@@ -519,9 +536,32 @@
 
 	.format-select:focus { outline: none; border-color: var(--accent); }
 
-	.action-panel { display: flex; justify-content: center; }
+	.action-panel { display: flex; flex-direction: column; gap: 6px; justify-content: center; }
 
-	/* Convert button - matches "Convert All" style (outline/ghost) */
+	.btn-download-original {
+		width: 100%;
+		padding: 8px 16px;
+		border: 1px dashed var(--border);
+		border-radius: var(--radius-md);
+		font-size: 12px;
+		font-weight: 600;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		font-family: inherit;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 6px;
+		background: transparent;
+		color: var(--fg-muted);
+	}
+
+	.btn-download-original:hover {
+		border-color: var(--accent);
+		color: var(--accent);
+		background: var(--accent-muted);
+	}
+
 	.btn-convert, .btn-download, .btn-retry {
 		width: 100%;
 		padding: 10px 16px;
@@ -632,7 +672,6 @@
 
 	@keyframes spin { to { transform: rotate(360deg); } }
 
-	/* ===== FOLDED layout (compact horizontal card) ===== */
 	.file-page.folded {
 		border-radius: var(--radius-md);
 	}
@@ -648,7 +687,6 @@
 		min-height: 72px;
 	}
 
-	/* Left: page 1 preview thumbnail */
 	.folded-preview {
 		flex: 0 0 56px;
 		width: 56px;
@@ -673,7 +711,6 @@
 		opacity: 0.4;
 	}
 
-	/* Middle: file info + controls + progress */
 	.folded-body {
 		flex: 1;
 		padding: 8px 12px;
@@ -744,7 +781,6 @@
 		margin-left: auto;
 	}
 
-	/* Small convert button - matches "Convert All" outline style */
 	.btn-convert-sm, .btn-dl-sm, .btn-retry-sm {
 		padding: 5px 12px;
 		border: 1px solid var(--border);
@@ -788,7 +824,27 @@
 
 	.btn-retry-sm:hover { transform: translateY(-1px); box-shadow: var(--shadow-sm); }
 
-	/* Progress bar in folded view */
+	.btn-dl-orig-sm {
+		padding: 5px 10px;
+		border: 1px dashed var(--border);
+		border-radius: var(--radius-sm);
+		font-size: 14px;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		font-family: inherit;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		background: transparent;
+		color: var(--fg-muted);
+	}
+
+	.btn-dl-orig-sm:hover {
+		border-color: var(--accent);
+		color: var(--accent);
+		background: var(--accent-muted);
+	}
+
 	.folded-progress {
 		display: flex;
 		align-items: center;
@@ -819,7 +875,6 @@
 		text-align: right;
 	}
 
-	/* Error message in folded view */
 	.folded-error {
 		margin-top: 2px;
 	}
@@ -830,7 +885,6 @@
 		font-weight: 500;
 	}
 
-	/* Right: tool icons */
 	.folded-tools {
 		flex: 0 0 36px;
 		width: 36px;
@@ -854,7 +908,6 @@
 		height: 14px;
 	}
 
-	/* Responsive */
 	@media (max-width: 768px) {
 		.page-layout {
 			flex-direction: column;
@@ -879,7 +932,6 @@
 
 		.preview-main { max-height: 180px; }
 
-		/* Folded stays horizontal on mobile */
 		.folded-layout {
 			flex-direction: row;
 		}

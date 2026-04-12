@@ -16,6 +16,7 @@ export { default as HeaderControls } from "./header/HeaderControls.svelte";
 
 export { default as HeroSection } from "./hero/HeroSection.svelte";
 export { default as ConvertPanel } from "./convert/ConvertPanel.svelte";
+export { default as FileControlPanel } from "./convert/FileControlPanel.svelte";
 export { default as FeaturesGrid } from "./features/FeaturesGrid.svelte";
 export { default as HowToUseSteps } from "./steps/HowToUseSteps.svelte";
 export { default as AboutSection } from "./about/AboutSection.svelte";

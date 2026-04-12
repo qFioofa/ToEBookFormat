@@ -83,9 +83,6 @@ export class PdfReader {
 		}
 	}
 
-	/**
-	 * Extract text from a single page with proper Unicode support.
-	 */
 	_extractTextFromPage(textContent, pageNum) {
 		const items = textContent.items.map(item => ({
 			str: item.str,
@@ -98,14 +95,12 @@ export class PdfReader {
 			dir: item.dir || 'ltr'
 		}));
 
-		// Sort by vertical position (top to bottom), then horizontal (left to right)
 		items.sort((a, b) => {
 			const yDiff = b.y - a.y;
 			if (Math.abs(yDiff) > 2) return yDiff;
 			return a.x - b.x;
 		});
 
-		// Group items into lines by y-coordinate
 		const lines = [];
 		let currentLine = [];
 		let lastY = null;
@@ -122,7 +117,6 @@ export class PdfReader {
 		}
 		if (currentLine.length > 0) lines.push(currentLine);
 
-		// Filter out page numbers and decorative artifacts
 		const filteredLines = lines.filter(line => {
 			const lineText = line.map(item => item.str).join(' ').trim();
 			if (/^—?\s*Страница\s+\d+\s+из\s+\d+\s*—?$/i.test(lineText)) return false;
@@ -132,7 +126,6 @@ export class PdfReader {
 			return true;
 		});
 
-		// Group lines into paragraphs based on vertical gaps
 		const paragraphs = [];
 		let currentParagraph = [];
 		let lastLineY = null;
@@ -157,7 +150,6 @@ export class PdfReader {
 		}
 		if (currentParagraph.length > 0) paragraphs.push(currentParagraph);
 
-		// Build formatted text
 		let result = "";
 		for (const para of paragraphs) {
 			const paraLines = para.map(line => {
@@ -193,9 +185,6 @@ export class PdfReader {
 		return result;
 	}
 
-	/**
-	 * Clean inline typography.
-	 */
 	_cleanInlineTypography(text) {
 		let result = text;
 		result = result.replace(/\s+([.,;:!?])/g, '$1');
@@ -209,9 +198,6 @@ export class PdfReader {
 		return result.trim();
 	}
 
-	/**
-	 * Post-process the full document text.
-	 */
 	_cleanTypography(text) {
 		let result = text;
 		result = result.replace(/^[═─]{3,}\s*$/gm, '');
@@ -228,9 +214,6 @@ export class PdfReader {
 		return result;
 	}
 
-	/**
-	 * Extract images from a PDF page.
-	 */
 	async _extractImagesFromPage(page, pageNum) {
 		const images = [];
 		try {
@@ -238,7 +221,6 @@ export class PdfReader {
 			const ops = operatorList.fnArray;
 			const args = operatorList.argsArray;
 
-			// PDF.js operator constants for image painting
 			const paintImageXObject = 86;
 			const paintJpegImg = 87;
 
@@ -265,7 +247,6 @@ export class PdfReader {
 						});
 					}
 				} catch (e) {
-					// Silently skip images that can't be extracted
 				}
 			}
 		} catch (e) {

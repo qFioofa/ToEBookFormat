@@ -3,6 +3,7 @@
 		PageLayout,
 		LogoMain,
 		ConvertPanel,
+		FileControlPanel,
 		HeroSection,
 		FeaturesGrid,
 		HowToUseSteps,
@@ -34,6 +35,7 @@
 	let zipDownloading = false;
 	let foldedFiles = new Set();
 	let isConvertingAll = false;
+	let panelFolded = false;
 
 	const conversionHandlers = {};
 
@@ -67,6 +69,7 @@
 	$: pendingCount = uploadedFiles.filter(
 		(f) => f.status === "pending"
 	).length;
+	$: allFolded = totalCount > 0 && foldedFiles.size === totalCount;
 
 	function updateFile(id, changes) {
 		const idx = uploadedFiles.findIndex((f) => f.id === id);
@@ -171,8 +174,7 @@
 	async function handleConvert(id) {
 		const file = uploadedFiles.find((f) => f.id === id);
 		if (!file) return;
-		
-		// Don't start conversion if file is already being converted
+
 		if (file.status === "uploading" || file.status === "converting") return;
 
 		if (conversionHandlers[id]) {
@@ -194,6 +196,9 @@
 			conversionHandlers[updatedFile.id] = await startConversion(
 				updatedFile,
 				(changes) => {
+					if (changes.status === "completed") {
+						changes.needsConversion = false;
+					}
 					updateFile(updatedFile.id, changes);
 				}
 			);
@@ -219,7 +224,6 @@
 		if (idx === -1) return;
 		const file = uploadedFiles[idx];
 
-		// If the file was already converted, changing format means it needs re-conversion
 		const wasCompleted = file.status === "completed" && !file.needsConversion;
 		const formatChanged = file.format !== format;
 
@@ -228,11 +232,9 @@
 			{
 				...file,
 				format,
-				// Clear result and mark as needing conversion if format changed after completion
 				needsConversion: wasCompleted && formatChanged ? true : file.needsConversion,
 				resultBlob: wasCompleted && formatChanged ? null : file.resultBlob,
 				resultName: wasCompleted && formatChanged ? null : file.resultName,
-				// Set to pending so the file is clearly marked as needing reconversion
 				status: wasCompleted && formatChanged ? "pending" : file.status,
 			},
 			...uploadedFiles.slice(idx + 1),
@@ -248,10 +250,7 @@
 
 			return {
 				...f,
-				// Always update format to the new global format
 				format: format,
-				// Completed files need re-conversion if their format differs from new global
-				// Reset to pending so they are clearly marked as needing reconversion
 				status: wasCompleted && formatChanged ? "pending" : f.status,
 				needsConversion: wasCompleted && formatChanged ? true : f.needsConversion,
 				resultBlob: wasCompleted && formatChanged ? null : f.resultBlob,
@@ -261,7 +260,6 @@
 	}
 
 	async function convertAll() {
-		// Prevent concurrent conversions
 		if (isConvertingAll) return;
 		isConvertingAll = true;
 
@@ -271,7 +269,6 @@
 					(f.status === "pending" ||
 					f.status === "error" ||
 					f.needsConversion) &&
-					// Don't convert files that are already being converted
 					f.status !== "uploading" &&
 					f.status !== "converting"
 			);
@@ -281,6 +278,7 @@
 				return;
 			}
 
+			const fileIdsToReset = [];
 			filesToConvert.forEach((file) => {
 				if (conversionHandlers[file.id]) {
 					if (conversionHandlers[file.id].cancel) {
@@ -288,38 +286,48 @@
 					}
 					delete conversionHandlers[file.id];
 				}
-				// Reset files that need conversion
 				if (file.status === "completed" || file.status === "error") {
-					updateFile(file.id, {
+					fileIdsToReset.push(file.id);
+				}
+			});
+
+			const updatedFiles = uploadedFiles.map((f) => {
+				if (fileIdsToReset.includes(f.id)) {
+					return {
+						...f,
 						status: "uploading",
 						progress: 0,
 						resultBlob: null,
 						resultName: null,
 						needsConversion: false,
 						error: null,
-					});
+					};
+				}
+				return f;
+			});
+			uploadedFiles = updatedFiles;
+
+			const conversionPromises = filesToConvert.map(async (file) => {
+				const currentFile = uploadedFiles.find(
+					(f) => f.id === file.id
+				);
+				if (!currentFile) return;
+
+				if (
+					currentFile.status === "pending" ||
+					currentFile.status === "uploading"
+				) {
+					conversionHandlers[currentFile.id] =
+						await startConversion(currentFile, (changes) => {
+							if (changes.status === "completed") {
+								changes.needsConversion = false;
+							}
+							updateFile(currentFile.id, changes);
+						});
 				}
 			});
 
-			await Promise.all(
-				filesToConvert.map(async (file) => {
-					const idx = uploadedFiles.findIndex(
-						(f) => f.id === file.id
-					);
-					if (idx === -1) return;
-					const currentFile = uploadedFiles[idx];
-					// Convert pending files or files that were just reset to uploading
-					if (
-						currentFile.status === "pending" ||
-						currentFile.status === "uploading"
-					) {
-						conversionHandlers[currentFile.id] =
-							await startConversion(currentFile, (changes) => {
-								updateFile(currentFile.id, changes);
-							});
-					}
-				})
-			);
+			await Promise.all(conversionPromises);
 		} finally {
 			isConvertingAll = false;
 		}
@@ -329,42 +337,84 @@
 		const completedFiles = uploadedFiles.filter(
 			(f) => f.status === "completed" && f.resultBlob
 		);
-		if (completedFiles.length === 0) return;
+		if (completedFiles.length === 0) {
+			console.warn("No completed files to download");
+			return;
+		}
 
 		zipDownloading = true;
 
-		const zip = new JSZip();
-		const names = new Set();
-		completedFiles.forEach((file) => {
-			let name =
-				file.resultName ||
-				file.name.replace(/\.[^/.]+$/, "") + "." + file.format;
-			let finalName = name;
-			let counter = 1;
-			while (names.has(finalName)) {
-				finalName = name.replace(
-					/(\.[^.]+)$/,
-					` (${counter})$1`
-				);
-				counter++;
-			}
-			names.add(finalName);
-			zip.file(finalName, file.resultBlob);
-		});
+		try {
+			const zip = new JSZip();
+			const names = new Set();
+			completedFiles.forEach((file) => {
+				let name =
+					file.resultName ||
+					file.name.replace(/\.[^/.]+$/, "") + "." + file.format;
+				let finalName = name;
+				let counter = 1;
+				while (names.has(finalName)) {
+					finalName = name.replace(
+						/(\.[^.]+)$/,
+						` (${counter})$1`
+					);
+					counter++;
+				}
+				names.add(finalName);
+				zip.file(finalName, file.resultBlob);
+			});
 
-		const blob = await zip.generateAsync({ type: "blob" });
-		const url = URL.createObjectURL(blob);
-		const a = document.createElement("a");
-		a.href = url;
-		a.download = "converted_ebooks.zip";
-		document.body.appendChild(a);
-		a.click();
-		document.body.removeChild(a);
-		URL.revokeObjectURL(url);
+			const blob = await zip.generateAsync({ type: "blob" });
+			const url = URL.createObjectURL(blob);
+			const a = document.createElement("a");
+			a.href = url;
+			a.download = "converted_ebooks.zip";
+			document.body.appendChild(a);
+			a.click();
+			document.body.removeChild(a);
+			URL.revokeObjectURL(url);
+		} catch (error) {
+			console.error("Error creating ZIP file:", error);
+		} finally {
+			setTimeout(() => {
+				zipDownloading = false;
+			}, 500);
+		}
+	}
 
-		setTimeout(() => {
-			zipDownloading = false;
-		}, 500);
+	async function downloadAllSeparate() {
+		const completedFiles = uploadedFiles.filter(
+			(f) => f.status === "completed" && f.resultBlob
+		);
+		if (completedFiles.length === 0) {
+			console.warn("No completed files to download");
+			return;
+		}
+
+		// Download each file separately with a small delay
+		for (const file of completedFiles) {
+			const url = URL.createObjectURL(file.resultBlob);
+			const a = document.createElement("a");
+			a.href = url;
+			a.download = file.resultName || file.name.replace(/\.[^/.]+$/, "") + "." + file.format;
+			document.body.appendChild(a);
+			a.click();
+			document.body.removeChild(a);
+			URL.revokeObjectURL(url);
+			await new Promise(resolve => setTimeout(resolve, 300));
+		}
+	}
+
+	function foldAllFiles() {
+		foldedFiles = new Set(uploadedFiles.map(f => f.id));
+	}
+
+	function unfoldAllFiles() {
+		foldedFiles = new Set();
+	}
+
+	function togglePanelFold() {
+		panelFolded = !panelFolded;
 	}
 
 	function confirmRemoveAll() {
@@ -449,16 +499,28 @@
 					{uploadedFiles}
 					{globalFormat}
 					formatOptions={FORMAT_OPTIONS}
-					{zipDownloading}
-					{allCompleted}
-					{anyConverting}
 					on:filesDrop={(e) => handleFilesDrop(e.detail)}
-					on:globalFormatChange={(e) => handleGlobalFormatChange(e.detail)}
-					on:removeAll={confirmRemoveAll}
-					on:convertAll={convertAll}
-					on:downloadZip={downloadAllZip}
 				>
 					<svelte:fragment slot="files">
+						<FileControlPanel
+							{GlobalTranslater}
+							{uploadedFiles}
+							{globalFormat}
+							formatOptions={FORMAT_OPTIONS}
+							{zipDownloading}
+							{allCompleted}
+							{anyConverting}
+							{allFolded}
+							{panelFolded}
+							on:globalFormatChange={(e) => handleGlobalFormatChange(e.detail)}
+							on:removeAll={confirmRemoveAll}
+							on:convertAll={convertAll}
+							on:downloadZip={downloadAllZip}
+							on:downloadAllSeparate={downloadAllSeparate}
+							on:foldAll={foldAllFiles}
+							on:unfoldAll={unfoldAllFiles}
+							on:togglePanelFold={togglePanelFold}
+						/>
 						<FileManager
 							{uploadedFiles}
 							formatOptions={FORMAT_OPTIONS}

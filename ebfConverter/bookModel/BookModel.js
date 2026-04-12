@@ -16,8 +16,8 @@ export class BookModel {
 		this.publisher = '';
 		this.pubDate = '';
 		this.isbn = '';
-		this.chapters = [];  // [{ title, paragraphs }]
-		this.images = [];    // [{ data, width, height, page }]
+		this.chapters = [];
+		this.images = [];
 		this.coverImage = null;
 	}
 
@@ -123,7 +123,6 @@ export class BookModel {
 			}
 			for (let i = 0; i < chapter.paragraphs.length; i++) {
 				parts.push(`      <p>${this._escapeXml(chapter.paragraphs[i])}</p>`);
-				// Add empty-line between paragraphs (not after the last one)
 				if (i < chapter.paragraphs.length - 1) {
 					parts.push('      <empty-line/>');
 				}

@@ -49,7 +49,6 @@ export async function startConversion(file, onProgress) {
 	try {
 		onProgress({ progress: 10, status: 'converting' });
 
-		// Step 1: Extract text and images from PDF
 		const { PdfReader } = await import('./pdfReader/PdfReader.js');
 		const reader = new PdfReader();
 
@@ -64,14 +63,12 @@ export async function startConversion(file, onProgress) {
 
 		if (cancelled) return { cancel: () => {} };
 
-		// Step 2: Clean and analyze text structure
 		const { StructureAnalyzer } = await import('./structureAnalyzer/StructureAnalyzer.js');
 		const analyzer = new StructureAnalyzer();
 		const cleanText = analyzer.cleanDocumentText(extractedText);
 
 		onProgress({ progress: 50, status: 'converting' });
 
-		// Step 3: Generate output format
 		const title = file.title || file.name.replace(/\.[^/.]+$/, '');
 		const author = file.author || 'Unknown Author';
 		const language = file.language || 'en';

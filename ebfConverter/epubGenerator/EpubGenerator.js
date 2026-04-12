@@ -27,13 +27,11 @@ export class EpubGenerator {
 	async generate(title, author, text, images = [], language = 'en') {
 		const zip = new JSZip();
 
-		// 1. mimetype — must be first, stored with no compression
 		zip.file('mimetype', 'application/epub+zip', {
 			compression: 'STORE',
 			compressionOptions: { level: 0 },
 		});
 
-		// 2. Container
 		zip.file('META-INF/container.xml', this._containerXml(), {
 			compression: 'DEFLATE',
 			compressionOptions: { level: 6 },
@@ -41,19 +39,15 @@ export class EpubGenerator {
 
 		const oebps = zip.folder('OEBPS');
 
-		// 3. Styles
 		oebps.file('styles.css', this._stylesCss(), {
 			compression: 'DEFLATE',
 			compressionOptions: { level: 6 },
 		});
 
-		// 4. Build book model for chapter structure
 		const book = BookModel.fromText(text, { title, author, language, images });
 
-		// 5. Images
 		const imageManifestEntries = this._addImages(oebps, images);
 
-		// 6. Chapter XHTML files
 		const chapterFiles = [];
 		for (let i = 0; i < book.chapters.length; i++) {
 			const chapter = book.chapters[i];
@@ -65,19 +59,16 @@ export class EpubGenerator {
 			chapterFiles.push(fileName);
 		}
 
-		// 7. Navigation (TOC)
 		oebps.file('nav.xhtml', this._buildNavXhtml(book), {
 			compression: 'DEFLATE',
 			compressionOptions: { level: 6 },
 		});
 
-		// 8. Package document
 		oebps.file('content.opf', this._buildContentOpf(book, language, imageManifestEntries, chapterFiles), {
 			compression: 'DEFLATE',
 			compressionOptions: { level: 6 },
 		});
 
-		// 9. Validate XHTML
 		for (const fileName of chapterFiles) {
 			const content = await zip.file(`OEBPS/${fileName}`).async('string');
 			this._validateXhtml(content, fileName);
