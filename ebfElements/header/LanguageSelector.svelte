@@ -20,7 +20,7 @@
 </script>
 
 <div class="lang-selector">
-	<button class="lang-btn" on:click={toggleMenu} type="button" aria-label="Switch language">
+	<button class="lang-btn" on:click={toggleMenu} type="button" aria-label={GlobalTranslater.t("lang_menu_title")}>
 		<svg class="lang-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 			<circle cx="12" cy="12" r="10"></circle>
 			<line x1="2" y1="12" x2="22" y2="12"></line>

@@ -4,10 +4,20 @@
 	export let file = null;
 	export let formatOptions = [];
 	export let selectedFormat = "epub";
+	export let translator = null;
 
 	const dispatch = createEventDispatcher();
 
 	let downloading = false;
+
+	function t(key, params = {}) {
+		if (!translator) return key;
+		let text = translator.t(key);
+		Object.keys(params).forEach(k => {
+			text = text.replace(`{${k}}`, params[k]);
+		});
+		return text;
+	}
 
 	function formatFileSize(bytes) {
 		if (!bytes || bytes === 0) return "0 KB";
@@ -64,7 +74,7 @@
 		<div class="file-name-area">
 			<span class="file-name">{file.name}</span>
 			<span class="file-meta-inline">
-				{formatFileSize(file.size)} · {file.pages || "—"} pages
+				{formatFileSize(file.size)} · {file.pages || "—"} {t("filecard_pages")}
 			</span>
 		</div>
 		<div class="file-actions">
@@ -72,7 +82,7 @@
 				<button
 					class="btn-icon"
 					on:click={handleRetry}
-					title="Retry"
+					title={t("filecard_retry")}
 				>
 					🔄
 				</button>
@@ -80,7 +90,7 @@
 			<button
 				class="btn-icon btn-remove"
 				on:click={handleRemove}
-				title="Remove"
+				title={t("filecard_remove")}
 			>
 				✕
 			</button>
@@ -89,7 +99,7 @@
 
 	<div class="file-card-body">
 		<div class="format-select-area">
-			<span class="format-label">Output</span>
+			<span class="format-label">{t("filecard_output")}</span>
 			<select
 				class="format-select"
 				value={selectedFormat}
@@ -115,7 +125,7 @@
 			</div>
 		{:else if file.status === "completed" && !file.needsConversion}
 			<div class="completed-area">
-				<span class="status-text">✅ Conversion complete</span>
+				<span class="status-text">✅ {t("filecard_complete")}</span>
 				<button
 					class="btn-download"
 					class:downloading
@@ -124,22 +134,22 @@
 					{#if downloading}
 						<span class="dl-spinner"></span>
 					{:else}
-						⬇ Download {selectedFormat.toUpperCase()}
+						⬇ {t("filecard_download", { format: selectedFormat.toUpperCase() })}
 					{/if}
 				</button>
 			</div>
 		{:else if file.status === "completed" && file.needsConversion}
 			<div class="needs-conversion-area">
 				<span class="status-text">
-					⚠️ Format changed — not converted
+					⚠️ {t("filecard_formatChanged")}
 				</span>
 				<button class="btn-convert-single" on:click={handleConvert}>
-					🔄 Convert to {selectedFormat.toUpperCase()}
+					🔄 {t("filecard_convertTo", { format: selectedFormat.toUpperCase() })}
 				</button>
 			</div>
 		{:else if file.status === "error"}
 			<div class="error-area">
-				<span class="status-text">❌ Conversion failed</span>
+				<span class="status-text">❌ {t("filecard_failed")}</span>
 			</div>
 		{/if}
 	</div>

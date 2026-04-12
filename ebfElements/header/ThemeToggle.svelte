@@ -9,7 +9,7 @@
 	}
 </script>
 
-<button class="theme-toggle" on:click={toggle} type="button" aria-label="Toggle theme">
+<button class="theme-toggle" on:click={toggle} type="button" aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}>
 	{#if isDark}
 		<span class="theme-icon">☀️</span>
 	{:else}

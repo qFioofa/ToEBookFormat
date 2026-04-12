@@ -5,6 +5,7 @@
 
 	export let uploadedFiles = [];
 	export let formatOptions = [];
+	export let translator = null;
 
 	const dispatch = createEventDispatcher();
 
@@ -31,6 +32,7 @@
 				file={file}
 				{formatOptions}
 				selectedFormat={file.format}
+				{translator}
 				onFormatChange={handleFormatChange}
 				onRemove={handleRemove}
 				onRetry={handleRetry}

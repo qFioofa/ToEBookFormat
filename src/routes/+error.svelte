@@ -1,11 +1,12 @@
 <script>
 	import { page } from "$app/stores";
 	import { LogoMain } from "@ebfElements";
+	import { GlobalTranslater } from "$lib/store/translater";
 </script>
 
 <svelte:head>
-	<title>Ошибка — ToEBookFormat</title>
-	<meta name="description" content="Страница не найдена или произошла ошибка" />
+	<title>{$page.status === 404 ? GlobalTranslater.t("error_404_title") : GlobalTranslater.t("error_500_title")} — ToEBookFormat</title>
+	<meta name="description" content={$page.status === 404 ? GlobalTranslater.t("error_404_desc") : GlobalTranslater.t("error_500_desc")} />
 </svelte:head>
 
 <div class="error-page">
@@ -14,20 +15,20 @@
 		<h1 class="error-code">{$page.status || 500}</h1>
 		<h2 class="error-title">
 			{#if $page.status === 404}
-				Страница не найдена
+				{GlobalTranslater.t("error_404_title")}
 			{:else}
-				Произошла ошибка
+				{GlobalTranslater.t("error_500_title")}
 			{/if}
 		</h2>
 		<p class="error-description">
 			{#if $page.status === 404}
-				К сожалению, страница, которую вы ищете, не существует.
+				{GlobalTranslater.t("error_404_desc")}
 			{:else}
-				Что-то пошло не так на сервере. Попробуйте обновить страницу или вернитесь на главную.
+				{GlobalTranslater.t("error_500_desc")}
 			{/if}
 		</p>
 		<a href="/" class="error-btn">
-			← Вернуться на главную
+			← {GlobalTranslater.t("error_backHome")}
 		</a>
 	</div>
 </div>

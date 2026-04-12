@@ -5,7 +5,7 @@
 <section id="hero" class="hero-section">
 	<div class="hero-bg"></div>
 	<div class="hero-content">
-		<span class="hero-badge">✨ Free & Open Source</span>
+		<span class="hero-badge">{GlobalTranslater.t("hero_badge")}</span>
 		<h1 class="hero-title">{GlobalTranslater.t("hero_title")}</h1>
 		<p class="hero-subtitle">{GlobalTranslater.t("hero_subtitle")}</p>
 		<p class="hero-description">
