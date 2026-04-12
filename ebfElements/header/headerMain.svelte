@@ -4,11 +4,16 @@
 
 	let isVisible = false;
 
-	export let howToUseSection = null;
+	export let convertSection = null;
 	export let formatsSection = null;
+	export let howToUseSection = null;
 	export let aboutSection = null;
 
 	$: navLinks = [
+		convertSection || {
+			text: GlobalTranslater.t("nav_convert"),
+			href: "#convert",
+		},
 		formatsSection || {
 			text: GlobalTranslater.t("nav_formats"),
 			href: "#formats",
@@ -21,7 +26,7 @@
 			text: GlobalTranslater.t("nav_about"),
 			href: "#about",
 		},
-	];
+	].filter(Boolean);
 
 	onMount(() => {
 		isVisible = true;
@@ -92,18 +97,21 @@
 	.nav-links {
 		display: flex;
 		align-items: center;
-		gap: 24px;
+		gap: 20px;
+		flex-wrap: wrap;
+		justify-content: flex-end;
 	}
 
 	.nav-link {
-		font-size: 0.95rem;
+		font-size: 0.9rem;
 		color: var(--fg-accent);
 		text-decoration: none;
 		font-weight: 500;
 		transition: all 0.2s ease;
 		position: relative;
-		padding: 8px 4px;
+		padding: 6px 2px;
 		white-space: nowrap;
+		flex-shrink: 0;
 	}
 
 	.nav-link::after {
@@ -140,21 +148,6 @@
 	@media (max-width: 768px) {
 		.header-top {
 			padding: 12px 16px;
-			gap: 16px;
-		}
-
-		.header-right {
-			gap: 16px;
-		}
-
-		.nav-links {
-			gap: 16px;
-		}
-	}
-
-	@media (max-width: 480px) {
-		.header-top {
-			padding: 10px 12px;
 			gap: 12px;
 		}
 
@@ -167,7 +160,67 @@
 		}
 
 		.nav-link {
-			font-size: 0.9rem;
+			font-size: 0.85rem;
+		}
+	}
+
+	@media (max-width: 600px) {
+		.header-content {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+		}
+
+		.header-top {
+			flex-direction: column;
+			align-items: center;
+			gap: 10px;
+			padding: 12px 16px 8px;
+		}
+
+		.header-left {
+			order: 1;
+		}
+
+		.header-right {
+			order: 2;
+			width: 100%;
+			flex-direction: column;
+			align-items: center;
+			gap: 10px;
+		}
+
+		.nav-links {
+			order: 1;
+			width: 100%;
+			justify-content: center;
+			gap: 10px;
+			padding-bottom: 10px;
+			border-bottom: 1px solid var(--border);
+		}
+
+		.header-controls {
+			order: 2;
+			justify-content: center;
+		}
+
+		.nav-link {
+			font-size: 0.85rem;
+			padding: 4px 2px;
+		}
+	}
+
+	@media (max-width: 480px) {
+		.header-top {
+			padding: 10px 12px 6px;
+		}
+
+		.nav-links {
+			gap: 8px;
+		}
+
+		.nav-link {
+			font-size: 0.8rem;
 		}
 	}
 </style>

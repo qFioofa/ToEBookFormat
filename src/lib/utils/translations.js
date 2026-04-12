@@ -1,7 +1,8 @@
 export const EN = {
 	header_subtitle: "Convert your files to any ebook format",
-	nav_howToUse: "How to use",
+	nav_convert: "Convert",
 	nav_formats: "Formats",
+	nav_howToUse: "How to use",
 	nav_about: "About",
 	lang_current: "EN",
 	lang_menu_title: "Language",
@@ -119,8 +120,9 @@ export const EN = {
 
 export const RU = {
 	header_subtitle: "Конвертируйте файлы в любой формат электронных книг",
-	nav_howToUse: "Как использовать",
+	nav_convert: "Конвертер",
 	nav_formats: "Форматы",
+	nav_howToUse: "Как использовать",
 	nav_about: "О проекте",
 	lang_current: "RU",
 	lang_menu_title: "Язык",

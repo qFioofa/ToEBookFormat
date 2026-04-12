@@ -470,8 +470,9 @@
 
 {#key locale}
 	<PageLayout
-		howToUseSection={{ text: GlobalTranslater.t("nav_howToUse"), href: "#how-to-use" }}
+		convertSection={{ text: GlobalTranslater.t("nav_convert"), href: "#convert" }}
 		formatsSection={{ text: GlobalTranslater.t("nav_formats"), href: "#formats" }}
+		howToUseSection={{ text: GlobalTranslater.t("nav_howToUse"), href: "#how-to-use" }}
 		aboutSection={{ text: GlobalTranslater.t("nav_about"), href: "#about" }}
 	>
 		<svelte:fragment slot="Logo">
