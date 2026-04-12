@@ -20,6 +20,7 @@ export { default as FileControlPanel } from "./convert/FileControlPanel.svelte";
 export { default as FeaturesGrid } from "./features/FeaturesGrid.svelte";
 export { default as HowToUseSteps } from "./steps/HowToUseSteps.svelte";
 export { default as AboutSection } from "./about/AboutSection.svelte";
+export { default as FormatDetails } from "./formats/FormatDetails.svelte";
 export { default as RemoveConfirmModal } from "./modal/RemoveConfirmModal.svelte";
 
 export { default as PageLayout } from "./layout/PageLayout.svelte";

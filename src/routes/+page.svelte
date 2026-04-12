@@ -7,6 +7,7 @@
 		HeroSection,
 		FeaturesGrid,
 		HowToUseSteps,
+		FormatDetails,
 		AboutSection,
 		RemoveConfirmModal,
 		FileManager,
@@ -468,7 +469,11 @@
 </svelte:head>
 
 {#key locale}
-	<PageLayout>
+	<PageLayout
+		howToUseSection={{ text: GlobalTranslater.t("nav_howToUse"), href: "#how-to-use" }}
+		formatsSection={{ text: GlobalTranslater.t("nav_formats"), href: "#formats" }}
+		aboutSection={{ text: GlobalTranslater.t("nav_about"), href: "#about" }}
+	>
 		<svelte:fragment slot="Logo">
 			<LogoMain size="large" />
 		</svelte:fragment>
@@ -569,13 +574,22 @@
 			</div>
 		{/if}
 
-		<FeaturesGrid {GlobalTranslater} />
+		<FormatDetails {GlobalTranslater} />
 		<HowToUseSteps {GlobalTranslater} />
+		<FeaturesGrid {GlobalTranslater} />
 		<AboutSection {GlobalTranslater} />
 	</PageLayout>
 {/key}
 
 <style>
+	:global(html) {
+		scroll-behavior: smooth;
+	}
+
+	:global(section[id]) {
+		scroll-margin-top: 80px;
+	}
+
 	.convert-section {
 		padding: 64px 0;
 	}

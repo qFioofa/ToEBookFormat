@@ -2,10 +2,11 @@
 	import { HeaderMain, FooterMain } from "@ebfElements";
 
 	export let howToUseSection = null;
+	export let formatsSection = null;
 	export let aboutSection = null;
 </script>
 
-<HeaderMain {howToUseSection} {aboutSection}>
+<HeaderMain {howToUseSection} {formatsSection} {aboutSection}>
 	<svelte:fragment slot="Logo">
 		<slot name="Logo" />
 	</svelte:fragment>

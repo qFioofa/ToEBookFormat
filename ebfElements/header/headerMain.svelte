@@ -5,9 +5,14 @@
 	let isVisible = false;
 
 	export let howToUseSection = null;
+	export let formatsSection = null;
 	export let aboutSection = null;
 
 	$: navLinks = [
+		formatsSection || {
+			text: GlobalTranslater.t("nav_formats"),
+			href: "#formats",
+		},
 		howToUseSection || {
 			text: GlobalTranslater.t("nav_howToUse"),
 			href: "#how-to-use",
