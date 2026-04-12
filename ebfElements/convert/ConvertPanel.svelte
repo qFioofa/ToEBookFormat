@@ -153,14 +153,14 @@
 	.toolbar {
 		display: flex;
 		justify-content: space-between;
-		align-items: center;
-		gap: 16px;
-		flex-wrap: wrap;
+		align-items: flex-end;
+		gap: 20px;
+		flex-wrap: nowrap;
 		position: sticky;
 		top: 0;
 		z-index: 10;
-		padding: 12px;
-		margin: -12px;
+		padding: 16px;
+		margin: -16px;
 		background: var(--bg-card);
 		border-radius: 10px;
 	}
@@ -170,26 +170,28 @@
 		flex-direction: column;
 		gap: 8px;
 		flex: 1;
-		min-width: 200px;
+		min-width: 0;
 	}
 
 	.format-label {
-		font-size: 13px;
+		font-size: 12px;
 		font-weight: 600;
 		color: var(--fg-muted);
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
 	}
 
 	.format-buttons {
 		display: flex;
-		flex-wrap: wrap;
-		gap: 8px;
+		flex-wrap: nowrap;
+		gap: 6px;
 	}
 
 	.format-btn {
 		display: flex;
 		align-items: center;
-		gap: 6px;
-		padding: 6px 12px;
+		gap: 5px;
+		padding: 8px 14px;
 		border: 1px solid var(--border);
 		border-radius: 8px;
 		background: var(--bg);
@@ -199,6 +201,7 @@
 		cursor: pointer;
 		transition: all 0.2s ease;
 		font-family: inherit;
+		white-space: nowrap;
 	}
 
 	.format-btn:hover {
@@ -218,7 +221,8 @@
 	.toolbar-right {
 		display: flex;
 		gap: 8px;
-		flex-wrap: wrap;
+		flex-wrap: nowrap;
+		flex-shrink: 0;
 	}
 
 	.btn-clear,
@@ -320,43 +324,38 @@
 		font-weight: 600;
 	}
 
-	@media (max-width: 768px) {
-		.convert-panel {
-			padding: 16px;
-		}
-
+	@media (max-width: 900px) {
 		.toolbar {
 			flex-direction: column;
 			align-items: stretch;
+			gap: 12px;
 		}
 
-		.toolbar-right {
-			width: 100%;
-			justify-content: center;
-		}
-
-		.btn-clear,
-		.btn-convert,
-		.btn-zip {
-			flex: 1;
-			justify-content: center;
-		}
-
-		.toolbar {
-			padding: 8px;
-			margin: -8px;
-		}
-
-		.format-buttons {
-			justify-content: center;
+		.toolbar-left {
+			align-items: center;
 		}
 
 		.format-label {
 			text-align: center;
 		}
 
-		.toolbar-left {
-			align-items: center;
+		.format-buttons {
+			justify-content: center;
+			flex-wrap: wrap;
+		}
+
+		.toolbar-right {
+			width: 100%;
+			justify-content: center;
+			flex-wrap: wrap;
+		}
+
+		.btn-clear,
+		.btn-convert,
+		.btn-zip {
+			flex: 1;
+			min-width: 120px;
+			justify-content: center;
 		}
 	}
 
@@ -364,6 +363,11 @@
 		.convert-panel {
 			padding: 12px;
 			gap: 12px;
+		}
+
+		.toolbar {
+			padding: 8px;
+			margin: -8px;
 		}
 
 		.btn-clear,
@@ -374,7 +378,7 @@
 		}
 
 		.format-btn {
-			padding: 4px 8px;
+			padding: 6px 10px;
 			font-size: 12px;
 		}
 
@@ -387,11 +391,6 @@
 		.btn-zip {
 			width: 100%;
 			justify-content: center;
-		}
-
-		.toolbar-left {
-			align-items: center;
-			text-align: center;
 		}
 
 		.format-buttons {

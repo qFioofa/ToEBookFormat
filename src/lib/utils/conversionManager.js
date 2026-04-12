@@ -133,9 +133,10 @@ export class ConversionManager {
 			...file,
 			format,
 			needsConversion,
-			// Clear old result if format changed
+			// Clear old result and set to pending if format changed
 			resultBlob: needsConversion ? null : file.resultBlob,
 			resultName: needsConversion ? null : file.resultName,
+			status: needsConversion ? "pending" : file.status,
 		};
 		return uploadedFiles;
 	}
@@ -143,15 +144,20 @@ export class ConversionManager {
 	updateGlobalFormat(globalFormat, uploadedFiles) {
 		return uploadedFiles.map((f) => {
 			const isProcessing = f.status === "uploading" || f.status === "converting";
-			const isCompleted = f.status === "completed";
+			const isCompleted = f.status === "completed" && !f.needsConversion;
 			const formatChanged = f.format !== globalFormat;
-			
+
 			return {
 				...f,
-				// Only auto-update format for files in progress
-				format: isProcessing ? globalFormat : f.format,
+				// Always update format to the new global format
+				format: globalFormat,
 				// Completed files need re-conversion if their format differs
+				// Reset to pending so they are clearly marked as needing reconversion
+				status: isCompleted && formatChanged ? "pending" : f.status,
 				needsConversion: isCompleted && formatChanged ? true : f.needsConversion,
+				// Clear old results
+				resultBlob: isCompleted && formatChanged ? null : f.resultBlob,
+				resultName: isCompleted && formatChanged ? null : f.resultName,
 			};
 		});
 	}

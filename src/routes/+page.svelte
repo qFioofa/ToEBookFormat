@@ -218,11 +218,11 @@
 		const idx = uploadedFiles.findIndex((f) => f.id === id);
 		if (idx === -1) return;
 		const file = uploadedFiles[idx];
-		
+
 		// If the file was already converted, changing format means it needs re-conversion
 		const wasCompleted = file.status === "completed" && !file.needsConversion;
 		const formatChanged = file.format !== format;
-		
+
 		uploadedFiles = [
 			...uploadedFiles.slice(0, idx),
 			{
@@ -232,8 +232,8 @@
 				needsConversion: wasCompleted && formatChanged ? true : file.needsConversion,
 				resultBlob: wasCompleted && formatChanged ? null : file.resultBlob,
 				resultName: wasCompleted && formatChanged ? null : file.resultName,
-				// Keep status as completed but show it needs re-conversion
-				status: wasCompleted && formatChanged ? "completed" : file.status,
+				// Set to pending so the file is clearly marked as needing reconversion
+				status: wasCompleted && formatChanged ? "pending" : file.status,
 			},
 			...uploadedFiles.slice(idx + 1),
 		];
@@ -248,10 +248,11 @@
 
 			return {
 				...f,
-				// Only auto-update format for files in progress or pending
-				format: isProcessing || f.status === "pending" ? format : f.format,
+				// Always update format to the new global format
+				format: format,
 				// Completed files need re-conversion if their format differs from new global
-				// and clear their result to force regeneration
+				// Reset to pending so they are clearly marked as needing reconversion
+				status: wasCompleted && formatChanged ? "pending" : f.status,
 				needsConversion: wasCompleted && formatChanged ? true : f.needsConversion,
 				resultBlob: wasCompleted && formatChanged ? null : f.resultBlob,
 				resultName: wasCompleted && formatChanged ? null : f.resultName,
@@ -452,7 +453,7 @@
 					{allCompleted}
 					{anyConverting}
 					on:filesDrop={(e) => handleFilesDrop(e.detail)}
-					on:globalFormatChange={handleGlobalFormatChange}
+					on:globalFormatChange={(e) => handleGlobalFormatChange(e.detail)}
 					on:removeAll={confirmRemoveAll}
 					on:convertAll={convertAll}
 					on:downloadZip={downloadAllZip}

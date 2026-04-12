@@ -17,8 +17,12 @@
 	let removing = false;
 	let folding = false;
 
-	// Ensure selectedFormat is always a valid string
-	$: safeFormat = String(selectedFormat || 'epub').toLowerCase();
+	// Ensure selectedFormat is always a valid format string
+	$: safeFormat = (() => {
+		const fmt = typeof selectedFormat === 'string' ? selectedFormat.toLowerCase() : 'epub';
+		const validFormats = ['epub', 'fb2', 'mobi', 'azw3', 'txt'];
+		return validFormats.includes(fmt) ? fmt : 'epub';
+	})();
 
 	function t(key, params = {}) {
 		if (!translator) return key;
