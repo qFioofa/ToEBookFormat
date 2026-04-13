@@ -199,11 +199,6 @@
 			border-bottom: 1px solid var(--border);
 		}
 
-		.header-controls {
-			order: 2;
-			justify-content: center;
-		}
-
 		.nav-link {
 			font-size: 0.85rem;
 			padding: 4px 2px;

@@ -44,7 +44,7 @@ export class PdfReader {
 	 * Extract text and images from a PDF file.
 	 * @param {ArrayBuffer} arrayBuffer
 	 * @param {Function} [onProgress] — callback with 0-100 progress
-	 * @returns {Promise<{text: string, images: Array<{page: number, data: Uint8Array, width: number, height: number}>}>}
+	 * @returns {Promise<{text: string, images: Array<{page: number, data: Uint8Array, width: number, height: number, content_type: string}>}>}
 	 */
 	async extractTextAndImages(arrayBuffer, onProgress) {
 		const lib = await this._getLib();
@@ -237,21 +237,41 @@ export class PdfReader {
 				try {
 					const imgData = await page.objs.get(imgName);
 					if (imgData && imgData.data && imgData.width && imgData.height) {
-						images.push({
-							page: pageNum,
-							data: imgData.data,
-							width: imgData.width,
-							height: imgData.height,
-							bitsPerComponent: imgData.bitsPerComponent || 8,
-							colorSpace: imgData.colorSpace || 'RGB',
-						});
+						// Filter out tiny/decorative images, keep only meaningful ones
+						if (imgData.width > 50 && imgData.height > 50) {
+							images.push({
+								page: pageNum,
+								data: this._normalizeImageData(imgData.data),
+								width: imgData.width,
+								height: imgData.height,
+								content_type: this._detectImageContentType(imgData),
+							});
+						}
 					}
 				} catch (e) {
+					console.warn(`Warning: Could not extract image ${imgName} from page ${pageNum}:`, e.message);
 				}
 			}
 		} catch (e) {
 			console.warn(`Warning: Could not process page ${pageNum} for images:`, e.message);
 		}
 		return images;
+	}
+
+	/**
+	 * Normalize image data to Uint8Array for consistent handling.
+	 */
+	_normalizeImageData(data) {
+		if (data instanceof Uint8Array) return data;
+		if (data instanceof ArrayBuffer) return new Uint8Array(data);
+		return new Uint8Array(data);
+	}
+
+	/**
+	 * Detect image content type from PDF image metadata.
+	 */
+	_detectImageContentType(imgData) {
+		if (imgData.kind === 'JPEG' || imgData.kind === 2) return 'image/jpeg';
+		return 'image/png';
 	}
 }

@@ -4,12 +4,12 @@
 
 	export let GlobalTranslater;
 	export let uploadedFiles = [];
-	export let globalFormat = "epub";
+	export const globalFormat = "epub";
 	export let formatOptions = [];
-	export let zipDownloading = false;
-	export let allCompleted = false;
-	export let anyConverting = false;
-	export let allFolded = false;
+	export const zipDownloading = false;
+	export const allCompleted = false;
+	export const anyConverting = false;
+	export const allFolded = false;
 
 	const dispatch = createEventDispatcher();
 
